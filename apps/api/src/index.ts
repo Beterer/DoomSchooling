@@ -1,11 +1,16 @@
 import { config } from 'dotenv';
 config({ path: new URL('../../../.env', import.meta.url) });
 
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Fastify, { type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import sensible from '@fastify/sensible';
 import healthRoutes from './routes/health.js';
 import feedsRoutes from './routes/feeds.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 const HOST = process.env['HOST'] ?? '0.0.0.0';
@@ -24,6 +29,11 @@ await fastify.register(cors, {
 });
 
 await fastify.register(sensible);
+await fastify.register(fastifyStatic, {
+  root: join(__dirname, 'uploads'),
+  prefix: '/uploads/',
+  decorateReply: false,
+});
 await fastify.register(healthRoutes);
 await fastify.register(feedsRoutes);
 

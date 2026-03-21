@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
@@ -107,18 +108,11 @@ export function PostBody({ post }: PostBodyProps) {
 
   if (post.postType === 'image' && post.imageUrl) {
     return (
-      <div className="space-y-3">
-        <img
-          src={post.imageUrl}
-          alt={post.imageAlt ?? ''}
-          className="rounded-2xl max-w-full border border-feed-border"
-        />
-        <div className="text-feed-text text-[15px] leading-relaxed">
-          <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-            {post.content}
-          </Markdown>
-        </div>
-      </div>
+      <ImagePost
+        imageUrl={post.imageUrl}
+        imageAlt={post.imageAlt ?? ''}
+        content={post.content}
+      />
     );
   }
 
@@ -127,6 +121,74 @@ export function PostBody({ post }: PostBodyProps) {
       <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
         {post.content}
       </Markdown>
+    </div>
+  );
+}
+
+function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    },
+    [onClose],
+  );
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [handleKeyDown]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-zoom-out"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+        aria-label="Close"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <img
+        src={src}
+        alt={alt}
+        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>,
+    document.body,
+  );
+}
+
+function ImagePost({ imageUrl, imageAlt, content }: { imageUrl: string; imageAlt: string; content: string }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  return (
+    <div className="space-y-3">
+      <img
+        src={imageUrl}
+        alt={imageAlt}
+        className="rounded-2xl max-w-full border border-feed-border cursor-zoom-in hover:brightness-90 transition-all"
+        onClick={(e) => {
+          e.stopPropagation();
+          setLightboxOpen(true);
+        }}
+      />
+      <div className="text-feed-text text-[15px] leading-relaxed">
+        <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          {content}
+        </Markdown>
+      </div>
+      {lightboxOpen && (
+        <ImageLightbox src={imageUrl} alt={imageAlt} onClose={() => setLightboxOpen(false)} />
+      )}
     </div>
   );
 }

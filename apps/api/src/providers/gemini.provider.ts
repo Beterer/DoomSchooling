@@ -64,11 +64,12 @@ const CONTINUATION_RESPONSE_SCHEMA: Schema = {
 };
 
 export class GeminiProvider implements ILLMProvider {
-  readonly supportsImageGeneration = false;
+  readonly supportsImageGeneration = true;
   readonly providerName = 'gemini';
 
   private readonly model;
   private readonly continuationModel;
+  private readonly imageModel;
 
   constructor() {
     const apiKey = process.env['GEMINI_API_KEY'];
@@ -93,6 +94,13 @@ export class GeminiProvider implements ILLMProvider {
         temperature: 0.9,
       },
     });
+    this.imageModel = genAI.getGenerativeModel({
+      model: 'gemini-3.1-flash-image-preview',
+      generationConfig: {
+        // @ts-expect-error -- responseModalities is supported by the API but not yet in the SDK types
+        responseModalities: ['IMAGE', 'TEXT'],
+      },
+    });
   }
 
   async generateFeed(request: FeedRequest): Promise<GeneratedFeed> {
@@ -111,8 +119,30 @@ export class GeminiProvider implements ILLMProvider {
     );
   }
 
-  async generateImage(_prompt: string): Promise<Buffer | null> {
-    return null;
+  async generateImage(prompt: string): Promise<Buffer | null> {
+    try {
+      const result = await this.imageModel.generateContent(
+        `Generate an educational illustration for a social media post. The image should be clear, informative, and visually engaging. Subject: ${prompt}`,
+      );
+
+      const response = result.response;
+      const candidates = response.candidates;
+      if (!candidates || candidates.length === 0) return null;
+
+      const parts = candidates[0]?.content?.parts;
+      if (!parts) return null;
+
+      for (const part of parts) {
+        if (part.inlineData?.data) {
+          return Buffer.from(part.inlineData.data, 'base64');
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Image generation failed:', error instanceof Error ? error.message : error);
+      return null;
+    }
   }
 
   private async callWithRetry<T>(

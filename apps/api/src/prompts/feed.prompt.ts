@@ -56,7 +56,7 @@ Rules for the JSON:
 - "handle" must start with @ and use snake_case
 - "content" supports markdown formatting
 - "language" field is required when postType is "code" (e.g. "javascript", "python", "bash")
-- "imageUrl" and "imageAlt" should be null (image generation is not supported)
+- For posts with postType "image": set "imageAlt" to a detailed description of the image to generate (this will be used to create the image). Set "imageUrl" to null — it will be populated automatically after generation. The "content" field should contain the text that accompanies the image.
 - "suggestedNextTopics" must contain exactly 5 strings — follow-up topics the reader might want to explore next
 - "generatedAt" must be a valid ISO 8601 datetime string`;
 }
@@ -94,8 +94,9 @@ Requirements:
    - Some deeper replies (depth 2) for back-and-forth exchanges
    - Use parentId correctly to build reply chains
 6. Include at least one divider post (postType: "divider") to separate major sections of the discussion
-7. Only use postType "code" if the topic is specifically about programming, software, or a technical tool that involves actual code syntax. For non-technical topics (history, cooking, art, science, etc.), do NOT include code posts — use only "text" and "divider" post types
-8. suggestedNextTopics: exactly 5 related topics the reader might want to explore next
+7. Only use postType "code" if the topic is specifically about programming, software, or a technical tool that involves actual code syntax. For non-technical topics (history, cooking, art, science, etc.), do NOT include code posts
+8. Include 1-2 posts with postType "image" where a visual would enhance understanding. The imageAlt field should describe the image in detail (e.g. "A diagram showing the layers of Earth's atmosphere with temperature gradients"). The content field should contain the post text that accompanies the image
+9. suggestedNextTopics: exactly 5 related topics the reader might want to explore next
 
 Return ONLY the JSON object. No other text.`;
 }
