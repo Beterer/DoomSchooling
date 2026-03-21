@@ -4,8 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "echo 'api not scaffolded yet'",
-    "build": "echo 'api not scaffolded yet'",
-    "typecheck": "echo 'api not scaffolded yet'"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@doomschooling/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.3"
   }
 }

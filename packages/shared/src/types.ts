@@ -1,44 +1,19 @@
-export type PostType = 'text' | 'code' | 'image' | 'divider';
+import type { z } from 'zod';
+import type {
+  PersonaRoleSchema,
+  PostTypeSchema,
+  PersonaSchema,
+  PostSchema,
+  FeedRequestSchema,
+  GeneratedFeedSchema,
+} from './schemas.js';
 
-export type PersonaRole =
-  | 'expert'
-  | 'practitioner'
-  | 'learner'
-  | 'skeptic'
-  | 'enthusiast';
+// Derive all types from Zod schemas — single source of truth.
+// Never write a type here that has a corresponding schema; use z.infer instead.
 
-export interface Persona {
-  id: string;
-  displayName: string;
-  handle: string;
-  role: PersonaRole;
-  avatarColor: string;
-  avatarInitials: string;
-}
-
-export interface Post {
-  id: string;
-  persona: Persona;
-  content: string;
-  postType: PostType;
-  language?: string;
-  imageUrl?: string | null;
-  imageAlt?: string | null;
-  depth: number;
-  parentId?: string | null;
-  votes: number;
-  timestamp: string;
-}
-
-export interface FeedRequest {
-  topic: string;
-  depth?: 'surface' | 'intermediate' | 'deep';
-}
-
-export interface GeneratedFeed {
-  id: string;
-  topic: string;
-  posts: Post[];
-  suggestedNextTopics: string[];
-  generatedAt: string;
-}
+export type PersonaRole = z.infer<typeof PersonaRoleSchema>;
+export type PostType = z.infer<typeof PostTypeSchema>;
+export type Persona = z.infer<typeof PersonaSchema>;
+export type Post = z.infer<typeof PostSchema>;
+export type FeedRequest = z.infer<typeof FeedRequestSchema>;
+export type GeneratedFeed = z.infer<typeof GeneratedFeedSchema>;

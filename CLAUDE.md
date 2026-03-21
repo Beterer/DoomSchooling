@@ -7,9 +7,9 @@ asked to revisit them.
 
 ---
 
-## What this app is
+## What this app is - DoomSchooling
 
-An educational platform that presents any learning topic as a scrolling social media
+DoomSchooling is an educational platform that presents any learning topic as a scrolling social media
 feed — similar to Reddit or Twitter/X. The user enters a topic (anything: Roman history,
 sourdough baking, JavaScript closures, Renaissance painting techniques) and receives a
 generated "thread" of posts from AI personas who teach through conversation, debate,

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install:*)",
+      "Bash(npm install:*)",
+      "Bash(~/.npm-global/bin/pnpm install:*)",
+      "Bash(~/.npm-global/bin/pnpm --filter @doomschooling/shared install 2>&1)",
+      "Bash(~/.npm-global/bin/pnpm --filter @doomschooling/shared exec tsc --noEmit 2>&1)",
+      "Bash(~/.npm-global/bin/pnpm --filter @doomschooling/shared add -D @types/node 2>&1)",
+      "Bash(gh auth:*)",
+      "Bash(git --version)",
+      "Bash(git config:*)",
+      "Bash(~/.npm-global/bin/pnpm --filter @doomschooling/shared build 2>&1)",
+      "Bash(~/.npm-global/bin/pnpm --filter api exec tsc --noEmit 2>&1)",
+      "Bash(~/.npm-global/bin/pnpm --filter @doomschooling/shared build)",
+      "Bash(~/.npm-global/bin/pnpm --filter api exec tsc --noEmit)",
+      "Bash(~/.npm-global/bin/pnpm --filter api exec tsx --tsconfig apps/api/tsconfig.json -e \"\nimport { MockProvider } from './apps/api/src/providers/mock.provider.ts';\nconst p = new MockProvider\\(\\);\nconst feed = await p.generateFeed\\({ topic: 'test topic', depth: 'intermediate' }\\);\nconst roles = [...new Set\\(feed.posts.map\\(p => p.persona.role\\)\\)].sort\\(\\);\nconst depths = [...new Set\\(feed.posts.map\\(p => p.depth\\)\\)].sort\\(\\);\nconst types = [...new Set\\(feed.posts.map\\(p => p.postType\\)\\)].sort\\(\\);\nconsole.log\\('posts:', feed.posts.length\\);\nconsole.log\\('roles:', roles.join\\(', '\\)\\);\nconsole.log\\('depths:', depths.join\\(', '\\)\\);\nconsole.log\\('postTypes:', types.join\\(', '\\)\\);\nconsole.log\\('suggestions:', feed.suggestedNextTopics.length\\);\nconsole.log\\('providerName:', p.providerName\\);\nconsole.log\\('supportsImages:', p.supportsImageGeneration\\);\n\" 2>&1)",
+      "Bash(~/.npm-global/bin/pnpm exec tsx -e \":*)",
+      "Bash(~/.npm-global/bin/pnpm exec tsx --input-type=module -e \":*)"
+    ]
+  }
+}
