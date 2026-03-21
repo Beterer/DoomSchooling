@@ -85,33 +85,39 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <header className="sticky top-0 z-10 bg-zinc-950/90 backdrop-blur-sm border-b border-zinc-800 px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
+    <div className="min-h-screen bg-feed-bg">
+      {/* Header */}
+      <header className="sticky top-0 z-10 bg-feed-bg/80 backdrop-blur-md border-b border-feed-border">
+        <div className="max-w-[600px] mx-auto flex items-center gap-4 px-4 h-[53px]">
           <button
             onClick={() => navigate('/')}
-            className="text-zinc-400 hover:text-zinc-100 transition-colors text-lg leading-none"
+            className="text-feed-text hover:bg-feed-card-hover p-2 -ml-2 rounded-full transition-colors"
             aria-label="Back to home"
           >
-            ←
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
           </button>
           <div className="min-w-0">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest">Learning</p>
-            <h1 className="text-zinc-100 font-semibold truncate">{topic}</h1>
+            <h1 className="text-feed-text font-bold text-xl leading-tight truncate">{topic}</h1>
+            <p className="text-feed-text-muted text-[13px]">
+              {posts.length > 0 ? `${posts.length} posts` : 'Generating...'}
+            </p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-4">
+      {/* Feed content */}
+      <main className="max-w-[600px] mx-auto">
         {initialLoad.isPending && <LoadingFeed />}
 
         {initialLoad.isError && (
-          <div className="bg-red-950 border border-red-800 rounded-lg p-6 text-center">
-            <p className="text-red-300 font-medium mb-2">Failed to generate feed</p>
-            <p className="text-red-400 text-sm">{initialLoad.error.message}</p>
+          <div className="m-4 bg-rose-950/50 border border-rose-800/50 rounded-2xl p-6 text-center">
+            <p className="text-rose-300 font-medium mb-2">Failed to generate feed</p>
+            <p className="text-rose-400/80 text-sm mb-4">{initialLoad.error.message}</p>
             <button
               onClick={() => initialLoad.mutate({ topic, depth: 'intermediate' })}
-              className="mt-4 bg-red-800 hover:bg-red-700 text-red-100 px-4 py-2 rounded-lg text-sm transition-colors"
+              className="bg-feed-accent hover:bg-feed-accent-hover text-white px-5 py-2 rounded-full text-sm font-bold transition-colors"
             >
               Try again
             </button>
@@ -128,18 +134,16 @@ export default function FeedPage() {
         <div ref={sentinelRef} />
 
         {loadMore.isPending && (
-          <div className="py-6">
+          <div>
             <LoadingFeed />
           </div>
         )}
 
         {posts.length > 0 && !loadMore.isPending && (
-          <div className="mt-8">
-            <Feed
-              feed={{ id: feedId, topic, posts: [], suggestedNextTopics, generatedAt: '' }}
-              hidePostList
-            />
-          </div>
+          <Feed
+            feed={{ id: feedId, topic, posts: [], suggestedNextTopics, generatedAt: '' }}
+            hidePostList
+          />
         )}
       </main>
     </div>

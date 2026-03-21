@@ -8,8 +8,8 @@ export function NextTopics({ topics }: NextTopicsProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="border-t border-zinc-800 pt-6 pb-10">
-      <h2 className="text-zinc-400 text-xs font-medium mb-3 uppercase tracking-widest">
+    <div className="border-b border-feed-border px-4 py-4">
+      <h2 className="text-feed-text font-bold text-xl mb-3">
         What to learn next
       </h2>
       <div className="flex flex-wrap gap-2">
@@ -17,7 +17,7 @@ export function NextTopics({ topics }: NextTopicsProps) {
           <button
             key={topic}
             onClick={() => navigate(`/feed?topic=${encodeURIComponent(topic)}`)}
-            className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-zinc-100 text-sm px-4 py-2 rounded-full transition-colors"
+            className="bg-transparent hover:bg-feed-accent/10 border border-feed-border hover:border-feed-accent/50 text-feed-text-secondary hover:text-feed-accent text-sm px-4 py-2 rounded-full transition-colors"
           >
             {topic}
           </button>

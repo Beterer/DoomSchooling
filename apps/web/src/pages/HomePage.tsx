@@ -22,25 +22,27 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-xl">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-zinc-100 mb-2 tracking-tight">
+    <div className="min-h-screen bg-feed-bg flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-lg">
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-extrabold text-feed-text mb-3 tracking-tight">
             DoomSchooling
           </h1>
-          <p className="text-zinc-400 text-lg">Learn anything. Scroll everything.</p>
+          <p className="text-feed-text-secondary text-lg">
+            Learn anything. Scroll everything.
+          </p>
         </div>
 
         <TopicInput value={topic} onChange={setTopic} onSubmit={handleSubmit} />
 
-        <div className="mt-6">
-          <p className="text-zinc-500 text-sm mb-3">Try:</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="mt-8 text-center">
+          <p className="text-feed-text-muted text-sm mb-3">Popular topics</p>
+          <div className="flex flex-wrap justify-center gap-2">
             {EXAMPLE_TOPICS.map((t) => (
               <button
                 key={t}
                 onClick={() => navigate(`/feed?topic=${encodeURIComponent(t)}`)}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm px-3 py-1.5 rounded-full transition-colors border border-zinc-700 hover:border-zinc-600"
+                className="bg-transparent hover:bg-feed-accent/10 text-feed-text-secondary hover:text-feed-accent text-sm px-4 py-2 rounded-full transition-colors border border-feed-border hover:border-feed-accent/50"
               >
                 {t}
               </button>

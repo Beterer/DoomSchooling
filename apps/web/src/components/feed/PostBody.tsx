@@ -12,13 +12,13 @@ interface PostBodyProps {
 const markdownComponents: Components = {
   p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
   strong: ({ children }) => (
-    <strong className="font-semibold text-zinc-100">{children}</strong>
+    <strong className="font-semibold text-feed-text">{children}</strong>
   ),
-  em: ({ children }) => <em className="text-zinc-300">{children}</em>,
+  em: ({ children }) => <em className="text-feed-text-secondary">{children}</em>,
   code: ({ children, className }) => {
     if (!className) {
       return (
-        <code className="bg-zinc-800 text-emerald-300 px-1 py-0.5 rounded text-xs font-mono">
+        <code className="bg-[#253341] text-emerald-300 px-1.5 py-0.5 rounded text-[13px] font-mono">
           {children}
         </code>
       );
@@ -26,26 +26,26 @@ const markdownComponents: Components = {
     return <code className={className}>{children}</code>;
   },
   pre: ({ children }) => (
-    <pre className="bg-zinc-950 rounded-lg p-4 overflow-x-auto text-sm font-mono mb-2">
+    <pre className="bg-[#0d1117] rounded-xl p-4 overflow-x-auto text-sm font-mono mb-2 border border-feed-border">
       {children}
     </pre>
   ),
   h1: ({ children }) => (
-    <h1 className="text-zinc-100 font-bold text-base mb-2">{children}</h1>
+    <h1 className="text-feed-text font-bold text-base mb-2">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-zinc-100 font-semibold text-sm mb-2">{children}</h2>
+    <h2 className="text-feed-text font-semibold text-[15px] mb-2">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-zinc-200 font-medium text-sm mb-1">{children}</h3>
+    <h3 className="text-feed-text font-medium text-[15px] mb-1">{children}</h3>
   ),
   ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
   ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
-  li: ({ children }) => <li className="text-zinc-300">{children}</li>,
+  li: ({ children }) => <li className="text-feed-text">{children}</li>,
   a: ({ href, children }) => (
     <a
       href={href}
-      className="text-indigo-400 hover:underline"
+      className="text-feed-accent hover:underline"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -53,7 +53,7 @@ const markdownComponents: Components = {
     </a>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="border-l-2 border-zinc-600 pl-3 text-zinc-400 italic my-2">
+    <blockquote className="border-l-2 border-feed-border pl-3 text-feed-text-secondary italic my-2">
       {children}
     </blockquote>
   ),
@@ -68,7 +68,7 @@ function ShikiCodeBlock({ content, language }: { content: string; language: stri
 
   if (!html) {
     return (
-      <pre className="bg-zinc-950 rounded-lg p-4 overflow-x-auto text-zinc-300 text-sm font-mono">
+      <pre className="bg-[#0d1117] rounded-xl p-4 overflow-x-auto text-feed-text-secondary text-sm font-mono border border-feed-border">
         <code>{content}</code>
       </pre>
     );
@@ -81,11 +81,11 @@ export function PostBody({ post }: PostBodyProps) {
   if (post.postType === 'divider') {
     return (
       <div className="flex items-center gap-3 py-1">
-        <div className="flex-1 h-px bg-zinc-800" />
-        <span className="text-zinc-500 text-xs uppercase tracking-widest font-medium whitespace-nowrap">
+        <div className="flex-1 h-px bg-feed-border" />
+        <span className="text-feed-text-muted text-xs uppercase tracking-widest font-medium whitespace-nowrap">
           {post.content}
         </span>
-        <div className="flex-1 h-px bg-zinc-800" />
+        <div className="flex-1 h-px bg-feed-border" />
       </div>
     );
   }
@@ -95,7 +95,7 @@ export function PostBody({ post }: PostBodyProps) {
       <div>
         {post.language && (
           <div className="mb-2">
-            <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded font-mono">
+            <span className="text-xs text-feed-text-muted bg-[#253341] px-2 py-0.5 rounded-md font-mono">
               {post.language}
             </span>
           </div>
@@ -111,9 +111,9 @@ export function PostBody({ post }: PostBodyProps) {
         <img
           src={post.imageUrl}
           alt={post.imageAlt ?? ''}
-          className="rounded-lg max-w-full border border-zinc-800"
+          className="rounded-2xl max-w-full border border-feed-border"
         />
-        <div className="text-zinc-300 text-sm leading-relaxed">
+        <div className="text-feed-text text-[15px] leading-relaxed">
           <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
             {post.content}
           </Markdown>
@@ -123,7 +123,7 @@ export function PostBody({ post }: PostBodyProps) {
   }
 
   return (
-    <div className="text-zinc-300 text-sm leading-relaxed">
+    <div className="text-feed-text text-[15px] leading-normal">
       <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
         {post.content}
       </Markdown>

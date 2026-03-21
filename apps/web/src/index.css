@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+@theme {
+  --color-feed-bg: #15202b;
+  --color-feed-card: #192734;
+  --color-feed-card-hover: #1e2d3d;
+  --color-feed-border: #38444d;
+  --color-feed-border-light: #2f3b44;
+  --color-feed-text: #d9d9d9;
+  --color-feed-text-secondary: #8899a6;
+  --color-feed-text-muted: #657786;
+  --color-feed-accent: #6c63ff;
+  --color-feed-accent-hover: #7b73ff;
+}
+
 /* Shiki code block overrides */
 .shiki {
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   padding: 1rem;
   overflow-x: auto;
   font-size: 0.875rem;
@@ -13,4 +26,19 @@
   background: none;
   padding: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-feed-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-feed-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-feed-text-muted);
 }

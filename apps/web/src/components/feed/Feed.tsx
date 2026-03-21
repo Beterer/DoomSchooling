@@ -12,15 +12,21 @@ export function Feed({ feed, hideNextTopics, hidePostList }: FeedProps) {
   return (
     <div>
       {!hidePostList && (
-        <div className="space-y-2">
-          {feed.posts.map((post) => (
-            <Post key={post.id} post={post} />
-          ))}
+        <div>
+          {feed.posts.map((post, index) => {
+            const nextPost = feed.posts[index + 1];
+            const isThreaded =
+              nextPost !== undefined &&
+              nextPost.depth > 0 &&
+              post.depth < nextPost.depth;
+
+            return <Post key={post.id} post={post} isThreaded={isThreaded} />;
+          })}
         </div>
       )}
 
       {!hideNextTopics && feed.suggestedNextTopics.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-4">
           <NextTopics topics={feed.suggestedNextTopics} />
         </div>
       )}
