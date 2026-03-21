@@ -56,6 +56,7 @@ Rules for the JSON:
 - "handle" must start with @ and use snake_case
 - "content" supports markdown formatting
 - "language" field is required when postType is "code" (e.g. "javascript", "python", "bash")
+- IMPORTANT: postType "code" is ONLY for real, runnable source code relevant to the topic. Never use "code" to present pseudocode, metaphors, analogies, or non-technical concepts in code-like syntax. If the topic is not about programming or software, do not use postType "code" at all
 - For posts with postType "image": set "imageAlt" to a detailed description of the image to generate (this will be used to create the image). Set "imageUrl" to null — it will be populated automatically after generation. The "content" field should contain the text that accompanies the image.
 - "suggestedNextTopics" must contain exactly 5 strings — follow-up topics the reader might want to explore next
 - "generatedAt" must be a valid ISO 8601 datetime string`;
@@ -137,6 +138,7 @@ Requirements:
 5. Post IDs must start from "post-${String(startId).padStart(2, '0')}" and increment
 6. Include a mix of depths — some top-level posts (depth 0) and some replies to previous or new posts
 7. Do NOT repeat content from the recent posts shown above
+8. Only use postType "code" if the topic is specifically about programming, software, or a technical tool that involves actual code syntax. For non-technical topics (history, cooking, art, science, etc.), do NOT include code posts — use "text" instead
 
 Return ONLY a JSON object with a single "posts" array. No other fields. No other text.`;
 }

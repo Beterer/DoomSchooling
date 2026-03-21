@@ -4,6 +4,10 @@ import { FeedRequestSchema, ContinueFeedRequestSchema } from '@doomschooling/sha
 import { resolveProvider } from '../providers/index.js';
 import { ImageService } from '../services/image.service.js';
 
+const MAX_CONTINUATIONS_PER_TOPIC = 5;
+const topicContinuationCounts = new Map<string, number>();
+const activeRequests = new Set<string>();
+
 async function populateImages(
   posts: Post[],
   provider: ReturnType<typeof resolveProvider>,
@@ -57,9 +61,38 @@ const feedsRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    const continuation = await provider.continueFeed(parsed.data);
-    await populateImages(continuation.posts, provider, imageService);
-    return reply.code(200).send({ data: continuation });
+    const { topic } = parsed.data;
+
+    // Reject if a request for this topic is already in flight
+    if (activeRequests.has(topic)) {
+      return reply.code(429).send({
+        error: {
+          code: 'REQUEST_IN_FLIGHT',
+          message: 'A generation request for this topic is already in progress',
+        },
+      });
+    }
+
+    // Enforce per-topic continuation limit
+    const count = topicContinuationCounts.get(topic) ?? 0;
+    if (count >= MAX_CONTINUATIONS_PER_TOPIC) {
+      return reply.code(429).send({
+        error: {
+          code: 'TOPIC_LIMIT_REACHED',
+          message: `Maximum of ${MAX_CONTINUATIONS_PER_TOPIC} continuations reached for this topic`,
+        },
+      });
+    }
+
+    activeRequests.add(topic);
+    try {
+      const continuation = await provider.continueFeed(parsed.data);
+      await populateImages(continuation.posts, provider, imageService);
+      topicContinuationCounts.set(topic, count + 1);
+      return reply.code(200).send({ data: continuation });
+    } finally {
+      activeRequests.delete(topic);
+    }
   });
 };
 

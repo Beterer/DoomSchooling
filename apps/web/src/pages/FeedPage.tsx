@@ -4,7 +4,10 @@ import { useMutation } from '@tanstack/react-query';
 import type { GeneratedFeed, Post, Persona } from '@doomschooling/shared';
 import { generateFeed, continueFeed } from '@/lib/api';
 import { Feed } from '@/components/feed/Feed';
+import { EndOfFeed } from '@/components/feed/EndOfFeed';
 import { LoadingFeed } from '@/components/ui/LoadingFeed';
+
+const MAX_GENERATION_ROUNDS = 5;
 
 export default function FeedPage() {
   const [searchParams] = useSearchParams();
@@ -15,8 +18,19 @@ export default function FeedPage() {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [suggestedNextTopics, setSuggestedNextTopics] = useState<string[]>([]);
   const [feedId, setFeedId] = useState('');
+  const [generationRound, setGenerationRound] = useState(0);
+  const generationRoundRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingMore = useRef(false);
+  const hasReachedLimit = generationRound >= MAX_GENERATION_ROUNDS;
+
+  // Stable refs for values used in the scroll callback to avoid observer churn
+  const postsRef = useRef(posts);
+  postsRef.current = posts;
+  const personasRef = useRef(personas);
+  personasRef.current = personas;
+  const topicRef = useRef(topic);
+  topicRef.current = topic;
 
   const initialLoad = useMutation({
     mutationFn: generateFeed,
@@ -24,6 +38,8 @@ export default function FeedPage() {
       setPosts(data.posts);
       setSuggestedNextTopics(data.suggestedNextTopics);
       setFeedId(data.id);
+      setGenerationRound(1);
+      generationRoundRef.current = 1;
       const uniquePersonas = extractPersonas(data.posts);
       setPersonas(uniquePersonas);
     },
@@ -33,6 +49,8 @@ export default function FeedPage() {
     mutationFn: continueFeed,
     onSuccess: (data) => {
       setPosts((prev) => [...prev, ...data.posts]);
+      generationRoundRef.current += 1;
+      setGenerationRound(generationRoundRef.current);
       isLoadingMore.current = false;
     },
     onError: () => {
@@ -40,31 +58,42 @@ export default function FeedPage() {
     },
   });
 
+  // Stable ref so handleLoadMore doesn't depend on the mutation object
+  const loadMoreMutateRef = useRef(loadMore.mutate);
+  loadMoreMutateRef.current = loadMore.mutate;
+
   useEffect(() => {
     if (topic) {
       setPosts([]);
       setPersonas([]);
       setSuggestedNextTopics([]);
       setFeedId('');
+      setGenerationRound(0);
+      generationRoundRef.current = 0;
       initialLoad.mutate({ topic, depth: 'intermediate' });
     }
   }, [topic]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLoadMore = useCallback(() => {
-    if (isLoadingMore.current || loadMore.isPending || posts.length === 0 || personas.length === 0) return;
+    if (
+      isLoadingMore.current ||
+      generationRoundRef.current >= MAX_GENERATION_ROUNDS ||
+      postsRef.current.length === 0 ||
+      personasRef.current.length === 0
+    ) return;
     isLoadingMore.current = true;
-    loadMore.mutate({
-      topic,
+    loadMoreMutateRef.current({
+      topic: topicRef.current,
       depth: 'intermediate',
-      personas,
-      lastPosts: posts.slice(-3),
-      postIdCounter: posts.length + 1,
+      personas: personasRef.current,
+      lastPosts: postsRef.current.slice(-3),
+      postIdCounter: postsRef.current.length + 1,
     });
-  }, [topic, personas, posts, loadMore]);
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || posts.length === 0) return;
+    if (!sentinel) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -77,7 +106,7 @@ export default function FeedPage() {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [handleLoadMore, posts.length]);
+  }, [handleLoadMore]);
 
   if (!topic) {
     navigate('/');
@@ -131,19 +160,27 @@ export default function FeedPage() {
           />
         )}
 
-        <div ref={sentinelRef} />
+        {hasReachedLimit ? (
+          posts.length > 0 && (
+            <EndOfFeed topics={suggestedNextTopics} />
+          )
+        ) : (
+          <>
+            <div ref={sentinelRef} />
 
-        {loadMore.isPending && (
-          <div>
-            <LoadingFeed />
-          </div>
-        )}
+            {loadMore.isPending && (
+              <div>
+                <LoadingFeed />
+              </div>
+            )}
 
-        {posts.length > 0 && !loadMore.isPending && (
-          <Feed
-            feed={{ id: feedId, topic, posts: [], suggestedNextTopics, generatedAt: '' }}
-            hidePostList
-          />
+            {posts.length > 0 && !loadMore.isPending && (
+              <Feed
+                feed={{ id: feedId, topic, posts: [], suggestedNextTopics, generatedAt: '' }}
+                hidePostList
+              />
+            )}
+          </>
         )}
       </main>
     </div>

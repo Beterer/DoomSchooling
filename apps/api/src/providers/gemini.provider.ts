@@ -95,7 +95,7 @@ export class GeminiProvider implements ILLMProvider {
       },
     });
     this.imageModel = genAI.getGenerativeModel({
-      model: 'gemini-3.1-flash-image-preview',
+      model: 'gemini-2.5-flash-image',
       generationConfig: {
         // @ts-expect-error -- responseModalities is supported by the API but not yet in the SDK types
         responseModalities: ['IMAGE', 'TEXT'],
