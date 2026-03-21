@@ -5,7 +5,7 @@ import { getAuth } from '@clerk/fastify';
 import { resolveProvider } from '../providers/index.js';
 import { ImageService } from '../services/image.service.js';
 
-const MAX_CONTINUATIONS_PER_TOPIC = 5;
+const MAX_CONTINUATIONS_PER_TOPIC = 10;
 const topicContinuationCounts = new Map<string, number>();
 const activeRequests = new Set<string>();
 

@@ -12,10 +12,11 @@ import { buildFeedSystemPrompt, buildFeedUserPrompt, buildContinueFeedUserPrompt
 
 const FEED_RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
-  required: ['id', 'topic', 'posts', 'suggestedNextTopics', 'generatedAt'],
+  required: ['id', 'topic', 'topicTitle', 'posts', 'suggestedNextTopics', 'generatedAt'],
   properties: {
     id: { type: SchemaType.STRING },
     topic: { type: SchemaType.STRING },
+    topicTitle: { type: SchemaType.STRING },
     generatedAt: { type: SchemaType.STRING },
     suggestedNextTopics: {
       type: SchemaType.ARRAY,

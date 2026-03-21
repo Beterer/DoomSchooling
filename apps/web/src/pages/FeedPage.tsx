@@ -7,7 +7,7 @@ import { Feed } from '@/components/feed/Feed';
 import { EndOfFeed } from '@/components/feed/EndOfFeed';
 import { LoadingFeed } from '@/components/ui/LoadingFeed';
 
-const MAX_GENERATION_ROUNDS = 5;
+const MAX_GENERATION_ROUNDS = 10;
 
 export default function FeedPage() {
   const [searchParams] = useSearchParams();
@@ -18,6 +18,7 @@ export default function FeedPage() {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [suggestedNextTopics, setSuggestedNextTopics] = useState<string[]>([]);
   const [feedId, setFeedId] = useState('');
+  const [topicTitle, setTopicTitle] = useState('');
   const [generationRound, setGenerationRound] = useState(0);
   const generationRoundRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -38,6 +39,7 @@ export default function FeedPage() {
       setPosts(data.posts);
       setSuggestedNextTopics(data.suggestedNextTopics);
       setFeedId(data.id);
+      setTopicTitle(data.topicTitle);
       setGenerationRound(1);
       generationRoundRef.current = 1;
       const uniquePersonas = extractPersonas(data.posts);
@@ -68,6 +70,7 @@ export default function FeedPage() {
       setPersonas([]);
       setSuggestedNextTopics([]);
       setFeedId('');
+      setTopicTitle('');
       setGenerationRound(0);
       generationRoundRef.current = 0;
       initialLoad.mutate({ topic, depth: 'intermediate' });
@@ -128,7 +131,7 @@ export default function FeedPage() {
             </svg>
           </button>
           <div className="min-w-0">
-            <h1 className="text-feed-text font-bold text-xl leading-tight truncate">{topic}</h1>
+            <h1 className="text-feed-text font-bold text-xl leading-tight truncate">{topicTitle || topic}</h1>
             <p className="text-feed-text-muted text-[13px]">
               {posts.length > 0 ? `${posts.length} posts` : 'Generating...'}
             </p>
@@ -155,7 +158,7 @@ export default function FeedPage() {
 
         {posts.length > 0 && (
           <Feed
-            feed={{ id: feedId, topic, posts, suggestedNextTopics, generatedAt: '' }}
+            feed={{ id: feedId, topic, topicTitle, posts, suggestedNextTopics, generatedAt: '' }}
             hideNextTopics
           />
         )}
@@ -176,7 +179,7 @@ export default function FeedPage() {
 
             {posts.length > 0 && !loadMore.isPending && (
               <Feed
-                feed={{ id: feedId, topic, posts: [], suggestedNextTopics, generatedAt: '' }}
+                feed={{ id: feedId, topic, topicTitle, posts: [], suggestedNextTopics, generatedAt: '' }}
                 hidePostList
               />
             )}

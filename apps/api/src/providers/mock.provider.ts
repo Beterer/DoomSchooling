@@ -367,9 +367,12 @@ function buildMockFeed(request: FeedRequest): GeneratedFeed {
     },
   ];
 
+  const topicTitle = topic.length > 50 ? topic.slice(0, 47) + '...' : topic;
+
   return {
     id: `mock-${Date.now()}`,
     topic,
+    topicTitle,
     posts,
     suggestedNextTopics: [
       'JavaScript Scope and the Scope Chain',

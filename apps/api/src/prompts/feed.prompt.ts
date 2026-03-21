@@ -9,6 +9,7 @@ import { isSensitiveTopic } from '../providers/base.js';
 const SCHEMA_EXAMPLE = `{
   "id": "<unique-string>",
   "topic": "<the requested topic>",
+  "topicTitle": "<short display title, max 50 chars>",
   "posts": [
     {
       "id": "post-01",
@@ -59,6 +60,7 @@ Rules for the JSON:
 - IMPORTANT: postType "code" is ONLY for real, runnable source code relevant to the topic. Never use "code" to present pseudocode, metaphors, analogies, or non-technical concepts in code-like syntax. If the topic is not about programming or software, do not use postType "code" at all
 - For posts with postType "image": set "imageAlt" to a detailed description of the image to generate (this will be used to create the image). Set "imageUrl" to null — it will be populated automatically after generation. The "content" field should contain the text that accompanies the image.
 - "suggestedNextTopics" must contain exactly 5 strings — follow-up topics the reader might want to explore next
+- "topicTitle" is a short, catchy display title (max 50 characters) that summarizes the user's topic request for use in a UI header. If the original topic is already short enough, use it as-is. Otherwise, condense it into a concise title
 - "generatedAt" must be a valid ISO 8601 datetime string`;
 }
 

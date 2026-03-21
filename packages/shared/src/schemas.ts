@@ -41,6 +41,7 @@ export const FeedRequestSchema = z.object({
 export const GeneratedFeedSchema = z.object({
   id: z.string(),
   topic: z.string(),
+  topicTitle: z.string().max(50),
   posts: z.array(PostSchema),
   suggestedNextTopics: z.array(z.string()).min(4).max(6),
   generatedAt: z.string(),

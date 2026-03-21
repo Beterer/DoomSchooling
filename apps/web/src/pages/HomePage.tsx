@@ -1,19 +1,17 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopicInput } from '@/components/ui/TopicInput';
+import { TOPIC_POOL } from '@/data/topics';
 
-const EXAMPLE_TOPICS = [
-  'JavaScript closures',
-  'The French Revolution',
-  'Sourdough baking',
-  'Black holes',
-  'Renaissance painting',
-  'How TCP/IP works',
-];
+function pickRandomTopics(count: number): string[] {
+  const shuffled = [...TOPIC_POOL].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 export default function HomePage() {
   const [topic, setTopic] = useState('');
   const navigate = useNavigate();
+  const exampleTopics = useMemo(() => pickRandomTopics(6), []);
 
   function handleSubmit() {
     const trimmed = topic.trim();
@@ -38,7 +36,7 @@ export default function HomePage() {
         <div className="mt-8 text-center">
           <p className="text-feed-text-muted text-sm mb-3">Popular topics</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {EXAMPLE_TOPICS.map((t) => (
+            {exampleTopics.map((t) => (
               <button
                 key={t}
                 onClick={() => navigate(`/feed?topic=${encodeURIComponent(t)}`)}
