@@ -2,9 +2,9 @@ import type { FastifyPluginAsync } from 'fastify';
 import { FeedRequestSchema } from '@doomschooling/shared';
 import { resolveProvider } from '../providers/index.js';
 
-const provider = resolveProvider();
-
 const feedsRoutes: FastifyPluginAsync = async (fastify) => {
+  const provider = resolveProvider();
+
   fastify.post('/api/feeds/generate', async (request, reply) => {
     const parsed = FeedRequestSchema.safeParse(request.body);
 

@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+config({ path: new URL('../../../.env', import.meta.url) });
+
 import Fastify, { type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';

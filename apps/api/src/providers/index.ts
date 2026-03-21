@@ -1,5 +1,6 @@
 import type { ILLMProvider } from '@doomschooling/shared';
 import { MockProvider } from './mock.provider.js';
+import { GeminiProvider } from './gemini.provider.js';
 
 /**
  * Reads LLM_PROVIDER env var and returns the appropriate provider instance.
@@ -12,7 +13,7 @@ export function resolveProvider(): ILLMProvider {
     case 'mock':
       return new MockProvider();
     case 'gemini':
-      throw new Error('GeminiProvider not yet implemented');
+      return new GeminiProvider();
     case 'claude':
       throw new Error('ClaudeProvider not yet implemented');
     case 'openai':
@@ -24,3 +25,4 @@ export function resolveProvider(): ILLMProvider {
 }
 
 export { MockProvider } from './mock.provider.js';
+export { GeminiProvider } from './gemini.provider.js';
