@@ -1,0 +1,11 @@
+{
+  "name": "api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'api not scaffolded yet'",
+    "build": "echo 'api not scaffolded yet'",
+    "typecheck": "echo 'api not scaffolded yet'"
+  }
+}
