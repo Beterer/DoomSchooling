@@ -1,4 +1,4 @@
-import type { FeedRequest, GeneratedFeed } from '@doomschooling/shared';
+import type { FeedRequest, GeneratedFeed, ContinueFeedRequest, FeedContinuation } from '@doomschooling/shared';
 
 type ApiError = {
   error: {
@@ -25,6 +25,14 @@ async function fetchApi<T>(url: string, options: RequestInit): Promise<T> {
 
 export async function generateFeed(request: FeedRequest): Promise<GeneratedFeed> {
   return fetchApi<GeneratedFeed>('/api/feeds/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function continueFeed(request: ContinueFeedRequest): Promise<FeedContinuation> {
+  return fetchApi<FeedContinuation>('/api/feeds/continue', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

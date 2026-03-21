@@ -3,9 +3,12 @@ import {
   type ILLMProvider,
   type FeedRequest,
   type GeneratedFeed,
+  type ContinueFeedRequest,
+  type FeedContinuation,
   GeneratedFeedSchema,
+  FeedContinuationSchema,
 } from '@doomschooling/shared';
-import { buildFeedSystemPrompt, buildFeedUserPrompt } from '../prompts/feed.prompt.js';
+import { buildFeedSystemPrompt, buildFeedUserPrompt, buildContinueFeedUserPrompt } from '../prompts/feed.prompt.js';
 
 const FEED_RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
@@ -52,11 +55,20 @@ const FEED_RESPONSE_SCHEMA: Schema = {
   },
 };
 
+const CONTINUATION_RESPONSE_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  required: ['posts'],
+  properties: {
+    posts: FEED_RESPONSE_SCHEMA.properties!['posts'] as Schema,
+  },
+};
+
 export class GeminiProvider implements ILLMProvider {
   readonly supportsImageGeneration = false;
   readonly providerName = 'gemini';
 
   private readonly model;
+  private readonly continuationModel;
 
   constructor() {
     const apiKey = process.env['GEMINI_API_KEY'];
@@ -64,32 +76,63 @@ export class GeminiProvider implements ILLMProvider {
       throw new Error('GEMINI_API_KEY environment variable is required when LLM_PROVIDER=gemini');
     }
     const genAI = new GoogleGenerativeAI(apiKey);
+    const modelName = 'gemini-3.1-flash-lite-preview';
     this.model = genAI.getGenerativeModel({
-      model: 'gemini-3.1-flash-lite-preview',
+      model: modelName,
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: FEED_RESPONSE_SCHEMA,
         temperature: 0.9,
       },
     });
+    this.continuationModel = genAI.getGenerativeModel({
+      model: modelName,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: CONTINUATION_RESPONSE_SCHEMA,
+        temperature: 0.9,
+      },
+    });
   }
 
   async generateFeed(request: FeedRequest): Promise<GeneratedFeed> {
-    const systemPrompt = buildFeedSystemPrompt();
-    const userPrompt = buildFeedUserPrompt(request);
+    return this.callWithRetry(
+      buildFeedUserPrompt(request),
+      this.model,
+      GeneratedFeedSchema,
+    );
+  }
 
+  async continueFeed(request: ContinueFeedRequest): Promise<FeedContinuation> {
+    return this.callWithRetry(
+      buildContinueFeedUserPrompt(request),
+      this.continuationModel,
+      FeedContinuationSchema,
+    );
+  }
+
+  async generateImage(_prompt: string): Promise<Buffer | null> {
+    return null;
+  }
+
+  private async callWithRetry<T>(
+    userPrompt: string,
+    model: typeof this.model,
+    schema: { parse: (data: unknown) => T },
+  ): Promise<T> {
+    const systemPrompt = buildFeedSystemPrompt();
     let lastError: unknown;
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const result = await this.model.generateContent({
+        const result = await model.generateContent({
           systemInstruction: systemPrompt,
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
         });
 
         const text = result.response.text();
         const parsed = JSON.parse(text) as unknown;
-        return GeneratedFeedSchema.parse(parsed);
+        return schema.parse(parsed);
       } catch (error) {
         lastError = error;
       }
@@ -97,13 +140,9 @@ export class GeminiProvider implements ILLMProvider {
 
     throw Object.assign(
       new Error(
-        `Gemini feed generation failed after 2 attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
+        `Gemini generation failed after 2 attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
       ),
       { statusCode: 502 },
     );
-  }
-
-  async generateImage(_prompt: string): Promise<Buffer | null> {
-    return null;
   }
 }

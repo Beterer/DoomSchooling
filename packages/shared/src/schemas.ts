@@ -45,3 +45,15 @@ export const GeneratedFeedSchema = z.object({
   suggestedNextTopics: z.array(z.string()).min(4).max(6),
   generatedAt: z.string(),
 });
+
+export const ContinueFeedRequestSchema = z.object({
+  topic: z.string().min(1).max(500),
+  depth: z.enum(['surface', 'intermediate', 'deep']).optional(),
+  personas: z.array(PersonaSchema),
+  lastPosts: z.array(PostSchema).min(1).max(5),
+  postIdCounter: z.number().int().min(1),
+});
+
+export const FeedContinuationSchema = z.object({
+  posts: z.array(PostSchema),
+});

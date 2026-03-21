@@ -1,4 +1,4 @@
-import { type ILLMProvider, type FeedRequest, type GeneratedFeed, type Post, GeneratedFeedSchema } from '@doomschooling/shared';
+import { type ILLMProvider, type FeedRequest, type GeneratedFeed, type Post, type ContinueFeedRequest, type FeedContinuation, GeneratedFeedSchema, FeedContinuationSchema } from '@doomschooling/shared';
 
 /**
  * Returns a hardcoded GeneratedFeed for UI development and CI environments.
@@ -21,6 +21,33 @@ export class MockProvider implements ILLMProvider {
     const feed = buildMockFeed(request);
     // Always validate our own output — catch schema drift early.
     return GeneratedFeedSchema.parse(feed);
+  }
+
+  async continueFeed(request: ContinueFeedRequest): Promise<FeedContinuation> {
+    const persona = request.personas[0] ?? {
+      id: 'persona-expert',
+      displayName: 'Dr. Scope',
+      handle: '@dr_scope',
+      role: 'expert' as const,
+      avatarColor: '#4F46E5',
+      avatarInitials: 'DS',
+    };
+    const startId = request.postIdCounter;
+    const continuation: FeedContinuation = {
+      posts: [
+        {
+          id: `post-${String(startId).padStart(2, '0')}`,
+          persona,
+          postType: 'text' as const,
+          content: `Continuing the discussion about ${request.topic} — there's always more to explore here.`,
+          depth: 0,
+          parentId: null,
+          votes: 45,
+          timestamp: '1m ago',
+        },
+      ],
+    };
+    return FeedContinuationSchema.parse(continuation);
   }
 
   async generateImage(_prompt: string): Promise<Buffer | null> {

@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useGenerateFeed } from '@/hooks/useGenerateFeed';
+import { useMutation } from '@tanstack/react-query';
+import type { GeneratedFeed, Post, Persona } from '@doomschooling/shared';
+import { generateFeed, continueFeed } from '@/lib/api';
 import { Feed } from '@/components/feed/Feed';
 import { LoadingFeed } from '@/components/ui/LoadingFeed';
 
@@ -9,14 +11,73 @@ export default function FeedPage() {
   const navigate = useNavigate();
   const topic = searchParams.get('topic') ?? '';
 
-  const { mutate, data, isPending, isError, error, reset } = useGenerateFeed();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [suggestedNextTopics, setSuggestedNextTopics] = useState<string[]>([]);
+  const [feedId, setFeedId] = useState('');
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const isLoadingMore = useRef(false);
+
+  const initialLoad = useMutation({
+    mutationFn: generateFeed,
+    onSuccess: (data: GeneratedFeed) => {
+      setPosts(data.posts);
+      setSuggestedNextTopics(data.suggestedNextTopics);
+      setFeedId(data.id);
+      const uniquePersonas = extractPersonas(data.posts);
+      setPersonas(uniquePersonas);
+    },
+  });
+
+  const loadMore = useMutation({
+    mutationFn: continueFeed,
+    onSuccess: (data) => {
+      setPosts((prev) => [...prev, ...data.posts]);
+      isLoadingMore.current = false;
+    },
+    onError: () => {
+      isLoadingMore.current = false;
+    },
+  });
 
   useEffect(() => {
     if (topic) {
-      reset();
-      mutate({ topic, depth: 'intermediate' });
+      setPosts([]);
+      setPersonas([]);
+      setSuggestedNextTopics([]);
+      setFeedId('');
+      initialLoad.mutate({ topic, depth: 'intermediate' });
     }
   }, [topic]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMore.current || loadMore.isPending || posts.length === 0 || personas.length === 0) return;
+    isLoadingMore.current = true;
+    loadMore.mutate({
+      topic,
+      depth: 'intermediate',
+      personas,
+      lastPosts: posts.slice(-3),
+      postIdCounter: posts.length + 1,
+    });
+  }, [topic, personas, posts, loadMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || posts.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: '1500px' },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [handleLoadMore, posts.length]);
 
   if (!topic) {
     navigate('/');
@@ -42,14 +103,14 @@ export default function FeedPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-4">
-        {isPending && <LoadingFeed />}
+        {initialLoad.isPending && <LoadingFeed />}
 
-        {isError && (
+        {initialLoad.isError && (
           <div className="bg-red-950 border border-red-800 rounded-lg p-6 text-center">
             <p className="text-red-300 font-medium mb-2">Failed to generate feed</p>
-            <p className="text-red-400 text-sm">{error.message}</p>
+            <p className="text-red-400 text-sm">{initialLoad.error.message}</p>
             <button
-              onClick={() => mutate({ topic, depth: 'intermediate' })}
+              onClick={() => initialLoad.mutate({ topic, depth: 'intermediate' })}
               className="mt-4 bg-red-800 hover:bg-red-700 text-red-100 px-4 py-2 rounded-lg text-sm transition-colors"
             >
               Try again
@@ -57,8 +118,42 @@ export default function FeedPage() {
           </div>
         )}
 
-        {!isPending && data && <Feed feed={data} />}
+        {posts.length > 0 && (
+          <Feed
+            feed={{ id: feedId, topic, posts, suggestedNextTopics, generatedAt: '' }}
+            hideNextTopics
+          />
+        )}
+
+        <div ref={sentinelRef} />
+
+        {loadMore.isPending && (
+          <div className="py-6">
+            <LoadingFeed />
+          </div>
+        )}
+
+        {posts.length > 0 && !loadMore.isPending && (
+          <div className="mt-8">
+            <Feed
+              feed={{ id: feedId, topic, posts: [], suggestedNextTopics, generatedAt: '' }}
+              hidePostList
+            />
+          </div>
+        )}
       </main>
     </div>
   );
+}
+
+function extractPersonas(posts: Post[]): Persona[] {
+  const seen = new Set<string>();
+  const result: Persona[] = [];
+  for (const post of posts) {
+    if (!seen.has(post.persona.id)) {
+      seen.add(post.persona.id);
+      result.push(post.persona);
+    }
+  }
+  return result;
 }

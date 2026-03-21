@@ -1,4 +1,4 @@
-import type { FeedRequest } from '@doomschooling/shared';
+import type { FeedRequest, ContinueFeedRequest } from '@doomschooling/shared';
 import { isSensitiveTopic } from '../providers/base.js';
 
 /**
@@ -98,4 +98,44 @@ Requirements:
 8. suggestedNextTopics: exactly 5 related topics the reader might want to explore next
 
 Return ONLY the JSON object. No other text.`;
+}
+
+export function buildContinueFeedUserPrompt(request: ContinueFeedRequest): string {
+  const depthInstruction =
+    request.depth === 'surface'
+      ? 'Keep explanations brief, approachable, and jargon-free.'
+      : request.depth === 'deep'
+        ? 'Go deep. Include nuance, edge cases, and expert-level detail.'
+        : 'Balance accessibility with substance. Intermediate level.';
+
+  const personaSummary = request.personas
+    .map((p) => `- ${p.displayName} (${p.handle}), role: ${p.role}, id: "${p.id}", avatarColor: "${p.avatarColor}", avatarInitials: "${p.avatarInitials}"`)
+    .join('\n');
+
+  const recentContext = request.lastPosts
+    .map((p) => `[${p.persona.handle}] (post id: "${p.id}", depth: ${p.depth}): ${p.content.slice(0, 200)}`)
+    .join('\n');
+
+  const startId = request.postIdCounter;
+
+  return `Continue the social media learning feed about: "${request.topic}"
+
+${depthInstruction}
+
+These are the existing personas — you MUST reuse them exactly (same id, displayName, handle, role, avatarColor, avatarInitials):
+${personaSummary}
+
+Here are the most recent posts for context (continue the discussion naturally from here):
+${recentContext}
+
+Requirements:
+1. Generate 6–10 NEW posts that continue the discussion
+2. Use the SAME personas listed above — do not create new ones
+3. Explore new subtopics or go deeper on what was being discussed
+4. Continue interleaving persona roles
+5. Post IDs must start from "post-${String(startId).padStart(2, '0')}" and increment
+6. Include a mix of depths — some top-level posts (depth 0) and some replies to previous or new posts
+7. Do NOT repeat content from the recent posts shown above
+
+Return ONLY a JSON object with a single "posts" array. No other fields. No other text.`;
 }
