@@ -94,7 +94,7 @@ Requirements:
    - Some deeper replies (depth 2) for back-and-forth exchanges
    - Use parentId correctly to build reply chains
 6. Include at least one divider post (postType: "divider") to separate major sections of the discussion
-7. If the topic involves code, commands, or technical syntax, include at least one code post (postType: "code") with the appropriate language field
+7. Only use postType "code" if the topic is specifically about programming, software, or a technical tool that involves actual code syntax. For non-technical topics (history, cooking, art, science, etc.), do NOT include code posts — use only "text" and "divider" post types
 8. suggestedNextTopics: exactly 5 related topics the reader might want to explore next
 
 Return ONLY the JSON object. No other text.`;
