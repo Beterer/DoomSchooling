@@ -116,7 +116,7 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-feed-bg">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-feed-bg/80 backdrop-blur-md border-b border-feed-border">
+      <header className="sticky top-[53px] z-10 bg-feed-bg/80 backdrop-blur-md border-b border-feed-border">
         <div className="max-w-[600px] mx-auto flex items-center gap-4 px-4 h-[53px]">
           <button
             onClick={() => navigate('/')}

@@ -96,7 +96,7 @@ Requirements:
    - Use parentId correctly to build reply chains
 6. Include at least one divider post (postType: "divider") to separate major sections of the discussion
 7. Only use postType "code" if the topic is specifically about programming, software, or a technical tool that involves actual code syntax. For non-technical topics (history, cooking, art, science, etc.), do NOT include code posts
-8. Include 1-2 posts with postType "image" where a visual would enhance understanding. The imageAlt field should describe the image in detail (e.g. "A diagram showing the layers of Earth's atmosphere with temperature gradients"). The content field should contain the post text that accompanies the image
+8. Include 2 posts with postType "image" where a visual would enhance understanding. The imageAlt field should describe the image in detail (e.g. "A diagram showing the layers of Earth's atmosphere with temperature gradients"). The content field should contain the post text that accompanies the image
 9. suggestedNextTopics: exactly 5 related topics the reader might want to explore next
 
 Return ONLY the JSON object. No other text.`;

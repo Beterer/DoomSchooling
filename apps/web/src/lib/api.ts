@@ -12,7 +12,10 @@ type ApiSuccess<T> = {
 };
 
 async function fetchApi<T>(url: string, options: RequestInit): Promise<T> {
-  const response = await fetch(url, options);
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include',
+  });
 
   if (!response.ok) {
     const body = (await response.json()) as ApiError;

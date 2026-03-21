@@ -5,6 +5,7 @@ import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  envDir: fileURLToPath(new URL('../..', import.meta.url)),
   resolve: {
     conditions: ['@tanstack/custom-condition'],
     alias: {

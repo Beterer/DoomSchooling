@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Post } from '@doomschooling/shared';
 import { FeedRequestSchema, ContinueFeedRequestSchema } from '@doomschooling/shared';
+import { getAuth } from '@clerk/fastify';
 import { resolveProvider } from '../providers/index.js';
 import { ImageService } from '../services/image.service.js';
 
@@ -31,6 +32,19 @@ async function populateImages(
 const feedsRoutes: FastifyPluginAsync = async (fastify) => {
   const provider = resolveProvider();
   const imageService = new ImageService();
+
+  // Require a valid Clerk session for all routes in this plugin
+  fastify.addHook('preHandler', async (request, reply) => {
+    const auth = getAuth(request);
+    if (!auth.userId) {
+      return reply.code(401).send({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required',
+        },
+      });
+    }
+  });
 
   fastify.post('/api/feeds/generate', async (request, reply) => {
     const parsed = FeedRequestSchema.safeParse(request.body);

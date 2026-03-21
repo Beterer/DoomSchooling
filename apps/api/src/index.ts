@@ -7,6 +7,7 @@ import Fastify, { type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import sensible from '@fastify/sensible';
+import { clerkPlugin } from '@clerk/fastify';
 import healthRoutes from './routes/health.js';
 import feedsRoutes from './routes/feeds.js';
 
@@ -29,6 +30,10 @@ await fastify.register(cors, {
 });
 
 await fastify.register(sensible);
+await fastify.register(clerkPlugin, {
+  publishableKey: process.env['CLERK_PUBLISHABLE_KEY'],
+  secretKey: process.env['CLERK_SECRET_KEY'],
+});
 await fastify.register(fastifyStatic, {
   root: join(__dirname, 'uploads'),
   prefix: '/uploads/',
