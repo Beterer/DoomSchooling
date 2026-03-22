@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, useUser, UserButton } from '@clerk/react';
 import HomePage from './pages/HomePage';
 import FeedPage from './pages/FeedPage';
@@ -37,13 +37,15 @@ function NavHeader() {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
+  const location = useLocation();
 
   if (!isLoaded) {
     return null;
   }
 
   if (!isSignedIn) {
-    return <Navigate to="/login" replace />;
+    const redirectUrl = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect_url=${redirectUrl}`} replace />;
   }
 
   return (

@@ -9,6 +9,36 @@ import { LoadingFeed } from '@/components/ui/LoadingFeed';
 
 const MAX_GENERATION_ROUNDS = 10;
 
+interface FeedCache {
+  posts: Post[];
+  personas: Persona[];
+  suggestedNextTopics: string[];
+  feedId: string;
+  topicTitle: string;
+  generationRound: number;
+}
+
+function cacheKey(topic: string) {
+  return `feed_cache:${topic}`;
+}
+
+function loadCache(topic: string): FeedCache | null {
+  try {
+    const raw = sessionStorage.getItem(cacheKey(topic));
+    return raw ? (JSON.parse(raw) as FeedCache) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCache(topic: string, data: FeedCache) {
+  try {
+    sessionStorage.setItem(cacheKey(topic), JSON.stringify(data));
+  } catch {
+    // sessionStorage full or unavailable — ignore
+  }
+}
+
 export default function FeedPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -65,17 +95,37 @@ export default function FeedPage() {
   loadMoreMutateRef.current = loadMore.mutate;
 
   useEffect(() => {
-    if (topic) {
-      setPosts([]);
-      setPersonas([]);
-      setSuggestedNextTopics([]);
-      setFeedId('');
-      setTopicTitle('');
-      setGenerationRound(0);
-      generationRoundRef.current = 0;
-      initialLoad.mutate({ topic, depth: 'intermediate' });
+    if (!topic) return;
+
+    const cached = loadCache(topic);
+    if (cached) {
+      setPosts(cached.posts);
+      setPersonas(cached.personas);
+      setSuggestedNextTopics(cached.suggestedNextTopics);
+      setFeedId(cached.feedId);
+      setTopicTitle(cached.topicTitle);
+      setGenerationRound(cached.generationRound);
+      generationRoundRef.current = cached.generationRound;
+      return;
     }
+
+    setPosts([]);
+    setPersonas([]);
+    setSuggestedNextTopics([]);
+    setFeedId('');
+    setTopicTitle('');
+    setGenerationRound(0);
+    generationRoundRef.current = 0;
+    initialLoad.mutate({ topic, depth: 'intermediate' });
   }, [topic]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist feed state to sessionStorage so a background-evicted page reload
+  // (common on iOS) restores content without re-hitting the API.
+  useEffect(() => {
+    if (posts.length > 0 && feedId) {
+      saveCache(topic, { posts, personas, suggestedNextTopics, feedId, topicTitle, generationRound });
+    }
+  }, [posts, personas, suggestedNextTopics, feedId, topicTitle, generationRound, topic]);
 
   const handleLoadMore = useCallback(() => {
     if (

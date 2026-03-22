@@ -46,7 +46,7 @@ ${SCHEMA_EXAMPLE}
 
 Rules for the JSON:
 - "id" fields must be unique strings (e.g. "post-01", "post-02", etc. for posts; "persona-expert", "persona-practitioner", etc. for personas)
-- "postType" must be one of: "text", "code", "image", "divider"
+- "postType" must be one of: "text", "image", "divider"
 - "role" must be one of: "expert", "practitioner", "learner", "skeptic", "enthusiast"
 - "depth" is an integer >= 0. Top-level posts have depth 0. Replies have depth 1, replies-to-replies have depth 2. Do not exceed depth 3.
 - "parentId" must reference the "id" of the post being replied to (null for depth-0 posts)
@@ -56,8 +56,6 @@ Rules for the JSON:
 - "avatarInitials" must be 1-2 uppercase characters
 - "handle" must start with @ and use snake_case
 - "content" supports markdown formatting
-- "language" field is required when postType is "code" (e.g. "javascript", "python", "bash")
-- IMPORTANT: postType "code" is ONLY for real, runnable source code relevant to the topic. Never use "code" to present pseudocode, metaphors, analogies, or non-technical concepts in code-like syntax. If the topic is not about programming or software, do not use postType "code" at all
 - For posts with postType "image": set "imageAlt" to a detailed description of the image to generate (this will be used to create the image). Set "imageUrl" to null — it will be populated automatically after generation. The "content" field should contain the text that accompanies the image.
 - "suggestedNextTopics" must contain exactly 5 strings — follow-up topics the reader might want to explore next
 - "topicTitle" is a short, catchy display title (max 50 characters) that summarizes the user's topic request for use in a UI header. If the original topic is already short enough, use it as-is. Otherwise, condense it into a concise title
@@ -97,9 +95,8 @@ Requirements:
    - Some deeper replies (depth 2) for back-and-forth exchanges
    - Use parentId correctly to build reply chains
 6. Include at least one divider post (postType: "divider") to separate major sections of the discussion
-7. Only use postType "code" if the topic is specifically about programming, software, or a technical tool that involves actual code syntax. For non-technical topics (history, cooking, art, science, etc.), do NOT include code posts
-8. Include 2 posts with postType "image" where a visual would enhance understanding. The imageAlt field should describe the image in detail (e.g. "A diagram showing the layers of Earth's atmosphere with temperature gradients"). The content field should contain the post text that accompanies the image
-9. suggestedNextTopics: exactly 5 related topics the reader might want to explore next
+7. Include 2 posts with postType "image" where a visual would enhance understanding. The imageAlt field should describe the image in detail (e.g. "A diagram showing the layers of Earth's atmosphere with temperature gradients"). The content field should contain the post text that accompanies the image
+8. suggestedNextTopics: exactly 5 related topics the reader might want to explore next
 
 Return ONLY the JSON object. No other text.`;
 }
@@ -140,7 +137,6 @@ Requirements:
 5. Post IDs must start from "post-${String(startId).padStart(2, '0')}" and increment
 6. Include a mix of depths — some top-level posts (depth 0) and some replies to previous or new posts
 7. Do NOT repeat content from the recent posts shown above
-8. Only use postType "code" if the topic is specifically about programming, software, or a technical tool that involves actual code syntax. For non-technical topics (history, cooking, art, science, etc.), do NOT include code posts — use "text" instead
 
 Return ONLY a JSON object with a single "posts" array. No other fields. No other text.`;
 }
