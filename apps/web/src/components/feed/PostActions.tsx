@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Heart, MessageCircle, Share2 } from 'lucide-react';
 import { useFeedStore } from '@/stores/feedStore';
 
 const emptyComments: never[] = [];
@@ -8,51 +9,51 @@ interface PostActionsProps {
   votes: number;
 }
 
-function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return String(n);
+function formatCount(count: number): string {
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return String(count);
 }
 
 export function PostActions({ postId, votes }: PostActionsProps) {
-  const replyCount = Math.floor(votes * 0.3);
-  const retweetCount = Math.floor(votes * 0.15);
-
-  const isUpvoted = useFeedStore((s) => s.upvotedPosts.has(postId));
-  const toggleUpvote = useFeedStore((s) => s.toggleUpvote);
-  const activeCommentPost = useFeedStore((s) => s.activeCommentPost);
-  const setActiveCommentPost = useFeedStore((s) => s.setActiveCommentPost);
-  const addComment = useFeedStore((s) => s.addComment);
-  const comments = useFeedStore((s) => s.comments.get(postId) ?? emptyComments);
+  const generatedReplyCount = Math.floor(votes * 0.18);
+  const isUpvoted = useFeedStore((state) => state.upvotedPosts.has(postId));
+  const toggleUpvote = useFeedStore((state) => state.toggleUpvote);
+  const activeCommentPost = useFeedStore((state) => state.activeCommentPost);
+  const setActiveCommentPost = useFeedStore((state) => state.setActiveCommentPost);
+  const addComment = useFeedStore((state) => state.addComment);
+  const comments = useFeedStore((state) => state.comments.get(postId) ?? emptyComments);
 
   const [commentText, setCommentText] = useState('');
-  const [shareToast, setShareToast] = useState(false);
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
   const isCommentOpen = activeCommentPost === postId;
   const displayVotes = isUpvoted ? votes + 1 : votes;
-  const totalComments = replyCount + comments.length;
+  const totalComments = generatedReplyCount + comments.length;
 
   useEffect(() => {
-    if (isCommentOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (isCommentOpen) inputRef.current?.focus();
   }, [isCommentOpen]);
 
-  function handleShare(e: React.MouseEvent) {
-    e.stopPropagation();
-    const url = window.location.origin;
-    navigator.clipboard.writeText(url).then(() => {
-      setShareToast(true);
-      setTimeout(() => setShareToast(false), 2000);
-    });
+  async function handleShare(event: React.MouseEvent) {
+    event.stopPropagation();
+
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareStatus('copied');
+    } catch {
+      setShareStatus('failed');
+    }
+
+    window.setTimeout(() => setShareStatus('idle'), 2000);
   }
 
-  function handleSubmitComment(e: React.FormEvent) {
-    e.preventDefault();
-    e.stopPropagation();
+  function handleSubmitComment(event: React.FormEvent) {
+    event.preventDefault();
+    event.stopPropagation();
     const trimmed = commentText.trim();
     if (!trimmed) return;
+
     addComment(postId, trimmed);
     setCommentText('');
     setActiveCommentPost(null);
@@ -60,131 +61,105 @@ export function PostActions({ postId, votes }: PostActionsProps) {
 
   return (
     <div className="mt-3">
-      <div className="flex items-center justify-between max-w-[425px] -ml-2">
-        {/* Reply / Comment */}
+      <div className="flex max-w-72 items-center justify-between -ml-2">
         <button
-          onClick={(e) => {
-            e.stopPropagation();
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
             setActiveCommentPost(isCommentOpen ? null : postId);
           }}
-          className={`group flex items-center gap-1 transition-colors ${
-            isCommentOpen ? 'text-sky-400' : 'text-feed-text-muted hover:text-sky-400'
+          className={`group flex h-8 min-w-14 items-center gap-1 text-xs transition-colors ${
+            isCommentOpen ? 'text-feed-accent' : 'text-feed-text-muted hover:text-feed-accent'
           }`}
+          aria-label="Comment"
+          title="Comment"
         >
-          <div className="p-2 rounded-full group-hover:bg-sky-400/10 transition-colors">
-            <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-          </div>
-          <span className="text-[13px]">{totalComments > 0 ? formatCount(totalComments) : ''}</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-feed-accent/10">
+            <MessageCircle aria-hidden="true" size={17} strokeWidth={1.8} />
+          </span>
+          {totalComments > 0 && <span>{formatCount(totalComments)}</span>}
         </button>
 
-        {/* Retweet / Boost (cosmetic) */}
-        <button className="group flex items-center gap-1 text-feed-text-muted hover:text-emerald-400 transition-colors">
-          <div className="p-2 rounded-full group-hover:bg-emerald-400/10 transition-colors">
-            <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </div>
-          <span className="text-[13px]">{retweetCount > 0 ? formatCount(retweetCount) : ''}</span>
-        </button>
-
-        {/* Like / Upvote */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
             toggleUpvote(postId);
           }}
-          className={`group flex items-center gap-1 transition-colors ${
-            isUpvoted ? 'text-rose-400' : 'text-feed-text-muted hover:text-rose-400'
+          className={`group flex h-8 min-w-14 items-center gap-1 text-xs transition-colors ${
+            isUpvoted ? 'text-feed-signal' : 'text-feed-text-muted hover:text-feed-signal'
           }`}
+          aria-label={isUpvoted ? 'Remove like' : 'Like'}
+          title={isUpvoted ? 'Remove like' : 'Like'}
         >
-          <div className="p-2 rounded-full group-hover:bg-rose-400/10 transition-colors">
-            <svg
-              className="w-[18px] h-[18px]"
-              fill={isUpvoted ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-          </div>
-          <span className="text-[13px]">{displayVotes > 0 ? formatCount(displayVotes) : ''}</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-feed-signal/10">
+            <Heart aria-hidden="true" fill={isUpvoted ? 'currentColor' : 'none'} size={17} strokeWidth={1.8} />
+          </span>
+          {displayVotes > 0 && <span>{formatCount(displayVotes)}</span>}
         </button>
 
-        {/* Share */}
         <div className="relative">
           <button
+            type="button"
             onClick={handleShare}
-            className="group flex items-center text-feed-text-muted hover:text-feed-accent transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-feed-text-muted transition-colors hover:bg-feed-accent/10 hover:text-feed-accent"
+            aria-label="Copy feed link"
+            title="Copy feed link"
           >
-            <div className="p-2 rounded-full group-hover:bg-feed-accent/10 transition-colors">
-              <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-            </div>
+            <Share2 aria-hidden="true" size={17} strokeWidth={1.8} />
           </button>
-          {shareToast && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-feed-accent text-white text-xs rounded-full whitespace-nowrap shadow-lg">
-              Link copied!
-            </div>
+          {shareStatus !== 'idle' && (
+            <span
+              role="status"
+              className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-feed-text px-2.5 py-1 text-[11px] text-white shadow-md"
+            >
+              {shareStatus === 'copied' ? 'Link copied' : 'Copy failed'}
+            </span>
           )}
         </div>
       </div>
 
-      {/* Comment input */}
       {isCommentOpen && (
-        <form onSubmit={handleSubmitComment} onClick={(e) => e.stopPropagation()} className="mt-2 ml-0">
+        <form onSubmit={handleSubmitComment} onClick={(event) => event.stopPropagation()} className="mt-3">
           <textarea
             ref={inputRef}
             value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmitComment(e);
+            onChange={(event) => setCommentText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSubmitComment(event);
               }
             }}
-            placeholder="Add a comment..."
+            placeholder="Add your thought"
             rows={2}
-            className="w-full bg-feed-bg border border-feed-border rounded-lg px-3 py-2 text-sm text-feed-text-primary placeholder:text-feed-text-muted focus:outline-none focus:border-feed-accent resize-none"
+            className="w-full resize-none rounded-md border border-feed-border bg-feed-bg px-3 py-2 text-sm text-feed-text placeholder:text-feed-text-muted focus:border-feed-accent focus:outline-none focus:ring-2 focus:ring-feed-accent/15"
           />
-          <div className="flex justify-end gap-2 mt-1">
+          <div className="mt-2 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setActiveCommentPost(null)}
-              className="px-3 py-1 text-xs text-feed-text-muted hover:text-feed-text-primary transition-colors"
+              className="h-8 px-3 text-xs font-semibold text-feed-text-muted transition-colors hover:text-feed-text"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!commentText.trim()}
-              className="px-3 py-1 text-xs bg-feed-accent text-white rounded-full disabled:opacity-40 hover:bg-feed-accent/80 transition-colors"
+              className="h-8 rounded-md bg-feed-accent px-3 text-xs font-bold text-white transition-colors hover:bg-feed-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Reply
+              Comment
             </button>
           </div>
         </form>
       )}
 
-      {/* Rendered comments */}
       {comments.length > 0 && (
-        <div className="mt-2 space-y-2">
+        <div className="mt-3 space-y-3">
           {comments.map((comment) => (
-            <div key={comment.id} className="pl-3 border-l-2 border-feed-border-light">
-              <p className="text-sm text-feed-text-secondary">{comment.text}</p>
-              <span className="text-xs text-feed-text-muted">just now</span>
+            <div key={comment.id} className="border-l-2 border-feed-border pl-3">
+              <p className="text-sm leading-6 text-feed-text-secondary">{comment.text}</p>
+              <span className="font-utility text-[10px] text-feed-text-muted">just now</span>
             </div>
           ))}
         </div>

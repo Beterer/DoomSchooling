@@ -1,28 +1,31 @@
+import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { buildFeedUrl, type LearningDepth } from '@/lib/feed';
 
 interface NextTopicsProps {
   topics: string[];
+  depth: LearningDepth;
 }
 
-export function NextTopics({ topics }: NextTopicsProps) {
+export function NextTopics({ topics, depth }: NextTopicsProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="border-b border-feed-border px-4 py-4">
-      <h2 className="text-feed-text font-bold text-xl mb-3">
-        What to learn next
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {topics.map((topic) => (
+    <section className="border-b border-feed-border bg-feed-bg px-4 py-5 sm:px-6">
+      <p className="font-utility text-xs font-semibold text-feed-text-muted">Change direction</p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {topics.slice(0, 4).map((topic) => (
           <button
             key={topic}
-            onClick={() => navigate(`/feed?topic=${encodeURIComponent(topic)}`)}
-            className="bg-transparent hover:bg-feed-accent/10 border border-feed-border hover:border-feed-accent/50 text-feed-text-secondary hover:text-feed-accent text-sm px-4 py-2 rounded-full transition-colors"
+            type="button"
+            onClick={() => navigate(buildFeedUrl(topic, depth))}
+            className="group flex min-h-11 items-center justify-between gap-3 rounded-md border border-feed-border bg-feed-card px-3 py-2 text-left text-sm font-medium text-feed-text transition-colors hover:border-feed-text-muted hover:bg-feed-card-hover"
           >
-            {topic}
+            <span>{topic}</span>
+            <ArrowRight aria-hidden="true" className="shrink-0 text-feed-text-muted group-hover:text-feed-accent" size={15} />
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

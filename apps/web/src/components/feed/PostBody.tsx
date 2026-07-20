@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { Post } from '@doomschooling/shared';
 import { highlightCode } from '@/lib/shiki';
 
@@ -11,15 +12,13 @@ interface PostBodyProps {
 }
 
 const markdownComponents: Components = {
-  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-  strong: ({ children }) => (
-    <strong className="font-semibold text-feed-text">{children}</strong>
-  ),
+  p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+  strong: ({ children }) => <strong className="font-bold text-feed-text">{children}</strong>,
   em: ({ children }) => <em className="text-feed-text-secondary">{children}</em>,
   code: ({ children, className }) => {
     if (!className) {
       return (
-        <code className="bg-[#253341] text-emerald-300 px-1.5 py-0.5 rounded text-[13px] font-mono">
+        <code className="rounded bg-[#e5ece8] px-1.5 py-0.5 font-utility text-[13px] text-[#115e50]">
           {children}
         </code>
       );
@@ -27,26 +26,20 @@ const markdownComponents: Components = {
     return <code className={className}>{children}</code>;
   },
   pre: ({ children }) => (
-    <pre className="bg-[#0d1117] rounded-xl p-4 overflow-x-auto text-sm font-mono mb-2 border border-feed-border">
+    <pre className="mb-3 overflow-x-auto rounded-md border border-[#29332f] bg-[#18201d] p-4 font-utility text-sm text-[#e9f1ed]">
       {children}
     </pre>
   ),
-  h1: ({ children }) => (
-    <h1 className="text-feed-text font-bold text-base mb-2">{children}</h1>
-  ),
-  h2: ({ children }) => (
-    <h2 className="text-feed-text font-semibold text-[15px] mb-2">{children}</h2>
-  ),
-  h3: ({ children }) => (
-    <h3 className="text-feed-text font-medium text-[15px] mb-1">{children}</h3>
-  ),
-  ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
-  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
-  li: ({ children }) => <li className="text-feed-text">{children}</li>,
+  h1: ({ children }) => <h1 className="mb-2 font-display text-xl font-bold text-feed-text">{children}</h1>,
+  h2: ({ children }) => <h2 className="mb-2 font-display text-lg font-bold text-feed-text">{children}</h2>,
+  h3: ({ children }) => <h3 className="mb-1 text-base font-bold text-feed-text">{children}</h3>,
+  ul: ({ children }) => <ul className="mb-3 list-outside list-disc space-y-1 pl-5">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-3 list-outside list-decimal space-y-1 pl-5">{children}</ol>,
+  li: ({ children }) => <li className="pl-1 text-feed-text">{children}</li>,
   a: ({ href, children }) => (
     <a
       href={href}
-      className="text-feed-accent hover:underline"
+      className="font-semibold text-feed-accent underline decoration-feed-border underline-offset-2 hover:decoration-feed-accent"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -54,10 +47,17 @@ const markdownComponents: Components = {
     </a>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="border-l-2 border-feed-border pl-3 text-feed-text-secondary italic my-2">
+    <blockquote className="my-3 border-l-2 border-feed-gold pl-4 text-feed-text-secondary">
       {children}
     </blockquote>
   ),
+  table: ({ children }) => (
+    <div className="mb-3 overflow-x-auto rounded-md border border-feed-border">
+      <table className="w-full border-collapse text-left text-sm">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => <th className="border-b border-feed-border bg-feed-bg px-3 py-2 font-bold">{children}</th>,
+  td: ({ children }) => <td className="border-b border-feed-border px-3 py-2 last:border-b-0">{children}</td>,
 };
 
 function ShikiCodeBlock({ content, language }: { content: string; language: string }) {
@@ -69,7 +69,7 @@ function ShikiCodeBlock({ content, language }: { content: string; language: stri
 
   if (!html) {
     return (
-      <pre className="bg-[#0d1117] rounded-xl p-4 overflow-x-auto text-feed-text-secondary text-sm font-mono border border-feed-border">
+      <pre className="overflow-x-auto rounded-md border border-[#29332f] bg-[#18201d] p-4 font-utility text-sm text-[#cad7d1]">
         <code>{content}</code>
       </pre>
     );
@@ -81,12 +81,10 @@ function ShikiCodeBlock({ content, language }: { content: string; language: stri
 export function PostBody({ post }: PostBodyProps) {
   if (post.postType === 'divider') {
     return (
-      <div className="flex items-center gap-3 py-1">
-        <div className="flex-1 h-px bg-feed-border" />
-        <span className="text-feed-text-muted text-xs uppercase tracking-widest font-medium whitespace-nowrap">
-          {post.content}
-        </span>
-        <div className="flex-1 h-px bg-feed-border" />
+      <div className="flex items-center gap-3 py-2">
+        <div className="h-px flex-1 bg-feed-border" />
+        <span className="font-utility text-[11px] font-bold text-feed-accent">{post.content}</span>
+        <div className="h-px flex-1 bg-feed-border" />
       </div>
     );
   }
@@ -95,29 +93,21 @@ export function PostBody({ post }: PostBodyProps) {
     return (
       <div>
         {post.language && (
-          <div className="mb-2">
-            <span className="text-xs text-feed-text-muted bg-[#253341] px-2 py-0.5 rounded-md font-mono">
-              {post.language}
-            </span>
-          </div>
+          <span className="mb-2 inline-block rounded bg-feed-bg px-2 py-1 font-utility text-[10px] font-semibold text-feed-text-muted">
+            {post.language}
+          </span>
         )}
-        <ShikiCodeBlock content={post.content} language={post.language ?? 'bash'} />
+        <ShikiCodeBlock content={post.content} language={post.language ?? 'text'} />
       </div>
     );
   }
 
   if (post.postType === 'image' && post.imageUrl) {
-    return (
-      <ImagePost
-        imageUrl={post.imageUrl}
-        imageAlt={post.imageAlt ?? ''}
-        content={post.content}
-      />
-    );
+    return <ImagePost imageUrl={post.imageUrl} imageAlt={post.imageAlt ?? ''} content={post.content} />;
   }
 
   return (
-    <div className="text-feed-text text-[15px] leading-normal">
+    <div className="text-[15px] leading-7 text-feed-text sm:text-base">
       <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
         {post.content}
       </Markdown>
@@ -127,8 +117,8 @@ export function PostBody({ post }: PostBodyProps) {
 
 function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
     },
     [onClose],
   );
@@ -144,23 +134,27 @@ function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClos
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-zoom-out"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Expanded educational image"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
       onClick={onClose}
     >
       <button
+        type="button"
         onClick={onClose}
-        className="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
-        aria-label="Close"
+        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+        aria-label="Close image"
+        title="Close image"
+        autoFocus
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <X aria-hidden="true" size={22} />
       </button>
       <img
         src={src}
         alt={alt}
-        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
-        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] max-w-[90vw] rounded-md object-contain"
+        onClick={(event) => event.stopPropagation()}
       />
     </div>,
     document.body,
@@ -172,23 +166,20 @@ function ImagePost({ imageUrl, imageAlt, content }: { imageUrl: string; imageAlt
 
   return (
     <div className="space-y-3">
-      <img
-        src={imageUrl}
-        alt={imageAlt}
-        className="rounded-2xl max-w-full border border-feed-border cursor-zoom-in hover:brightness-90 transition-all"
-        onClick={(e) => {
-          e.stopPropagation();
-          setLightboxOpen(true);
-        }}
-      />
-      <div className="text-feed-text text-[15px] leading-relaxed">
+      <button
+        type="button"
+        onClick={() => setLightboxOpen(true)}
+        className="block w-full overflow-hidden rounded-md border border-feed-border bg-feed-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-feed-accent"
+        aria-label="Expand educational image"
+      >
+        <img src={imageUrl} alt={imageAlt} className="max-h-[520px] w-full object-contain transition-opacity hover:opacity-90" />
+      </button>
+      <div className="text-[15px] leading-7 text-feed-text sm:text-base">
         <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
           {content}
         </Markdown>
       </div>
-      {lightboxOpen && (
-        <ImageLightbox src={imageUrl} alt={imageAlt} onClose={() => setLightboxOpen(false)} />
-      )}
+      {lightboxOpen && <ImageLightbox src={imageUrl} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
     </div>
   );
 }

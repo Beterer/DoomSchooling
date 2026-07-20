@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { Post } from '@doomschooling/shared';
+import type { GeneratedFeed, Post } from '@doomschooling/shared';
 import { FeedRequestSchema, ContinueFeedRequestSchema } from '@doomschooling/shared';
 import { getAuth } from '@clerk/fastify';
 import { resolveProvider } from '../providers/index.js';
@@ -8,6 +8,11 @@ import { ImageService } from '../services/image.service.js';
 const MAX_CONTINUATIONS_PER_TOPIC = 10;
 const topicContinuationCounts = new Map<string, number>();
 const activeRequests = new Set<string>();
+const activeFeedGenerations = new Map<string, Promise<GeneratedFeed>>();
+
+interface FeedsRouteOptions {
+  requireAuth?: boolean;
+}
 
 async function populateImages(
   posts: Post[],
@@ -29,22 +34,25 @@ async function populateImages(
   await Promise.all(imagePromises);
 }
 
-const feedsRoutes: FastifyPluginAsync = async (fastify) => {
+const feedsRoutes: FastifyPluginAsync<FeedsRouteOptions> = async (fastify, options) => {
   const provider = resolveProvider();
   const imageService = new ImageService();
+  const requireAuth = options.requireAuth ?? true;
 
-  // Require a valid Clerk session for all routes in this plugin
-  fastify.addHook('preHandler', async (request, reply) => {
-    const auth = getAuth(request);
-    if (!auth.userId) {
-      return reply.code(401).send({
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authentication required',
-        },
-      });
-    }
-  });
+  if (requireAuth) {
+    // Require a valid Clerk session for all routes in this plugin
+    fastify.addHook('preHandler', async (request, reply) => {
+      const auth = getAuth(request);
+      if (!auth.userId) {
+        return reply.code(401).send({
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'Authentication required',
+          },
+        });
+      }
+    });
+  }
 
   fastify.post('/api/feeds/generate', async (request, reply) => {
     const parsed = FeedRequestSchema.safeParse(request.body);
@@ -58,9 +66,26 @@ const feedsRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    const feed = await provider.generateFeed(parsed.data);
-    await populateImages(feed.posts, provider, imageService);
-    return reply.code(201).send({ data: feed });
+    const requestKey = `${parsed.data.depth ?? 'intermediate'}:${parsed.data.topic.trim().toLowerCase()}`;
+    let generation = activeFeedGenerations.get(requestKey);
+
+    if (!generation) {
+      generation = (async () => {
+        const feed = await provider.generateFeed(parsed.data);
+        await populateImages(feed.posts, provider, imageService);
+        return feed;
+      })();
+      activeFeedGenerations.set(requestKey, generation);
+    }
+
+    try {
+      const feed = await generation;
+      return reply.code(201).send({ data: feed });
+    } finally {
+      if (activeFeedGenerations.get(requestKey) === generation) {
+        activeFeedGenerations.delete(requestKey);
+      }
+    }
   });
 
   fastify.post('/api/feeds/continue', async (request, reply) => {

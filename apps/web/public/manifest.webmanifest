@@ -1,0 +1,16 @@
+{
+  "name": "DoomSchooling",
+  "short_name": "DoomSchooling",
+  "description": "Learn any topic through a lively, AI-generated conversation.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#f4f7f5",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
