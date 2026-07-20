@@ -35,7 +35,7 @@ Package manager is **pnpm** with workspaces. Never use npm or yarn.
 
 `ILLMProvider` interface in `packages/shared/src/llm.ts` defines `generateFeed()`, `continueFeed()`, `generateImage()`. The active provider is selected by `LLM_PROVIDER` env var via `resolveProvider()` factory in `apps/api/src/providers/index.ts`.
 
-Current providers: **GeminiProvider** (text + image, production), **MockProvider** (hardcoded, for UI dev). Claude and OpenAI providers are stubs.
+Current providers: **OpenRouterProvider** (DeepSeek V4 Flash by default, production text), **GeminiProvider** (text + image), and **MockProvider** (hardcoded, for UI dev). Claude and OpenAI providers are stubs.
 
 Critical rules:
 - Prompt templates live in `apps/api/src/prompts/`, never inside provider classes
@@ -61,7 +61,7 @@ Response envelope: `{ data: T }` on success, `{ error: { code, message } }` on f
 
 ### Image generation
 
-GeminiProvider generates images for `postType: 'image'` posts. Images are saved to `apps/api/src/uploads/` and served via `@fastify/static` at `/uploads/`. The Vite dev server proxies `/uploads` to the API.
+OpenRouter is text-only in this project. When GeminiProvider is selected, it generates images for `postType: 'image'` posts. Images are saved to `apps/api/src/uploads/` and served via `@fastify/static` at `/uploads/`. The Vite dev server proxies `/uploads` to the API.
 
 ## Coding conventions
 
@@ -81,14 +81,19 @@ Clerk handles all authentication. No custom users table or JWT logic.
 - **Backend**: `@clerk/fastify` verifies Clerk session tokens on protected routes
 - **Protected routes**: all `/api/feeds/*` routes require a valid Clerk session
 - `/api/health` remains public
+- Local development may explicitly set `DEV_AUTH_BYPASS=true` and `VITE_DEV_AUTH_BYPASS=true`; production never honors this bypass
 
 ## Environment variables
 
 Set in `.env` at repo root (gitignored):
 
 ```
-LLM_PROVIDER=gemini          # gemini | mock (claude | openai are stubs)
-GEMINI_API_KEY=...
+LLM_PROVIDER=openrouter      # openrouter | gemini | mock
+OPENROUTER_API_KEY=...
+OPENROUTER_MODEL=deepseek/deepseek-v4-flash
+DEV_AUTH_BYPASS=true        # local development only
+VITE_DEV_AUTH_BYPASS=true   # local development only
+GEMINI_API_KEY=...           # only needed for Gemini
 CLERK_PUBLISHABLE_KEY=...
 CLERK_SECRET_KEY=...
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/learnfeed

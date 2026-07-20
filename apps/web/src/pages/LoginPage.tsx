@@ -1,13 +1,47 @@
 import { SignIn } from '@clerk/react';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
+import { SiteHeader } from '@/components/ui/SiteHeader';
+import { hasClerk } from '@/lib/auth';
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect_url') ?? '/';
 
   return (
-    <div className="min-h-screen bg-feed-bg flex items-center justify-center p-6">
-      <SignIn signUpUrl="/register" forceRedirectUrl={redirectUrl} />
+    <div className="min-h-screen bg-feed-bg">
+      <SiteHeader />
+      <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-6">
+        {hasClerk ? (
+          <SignIn
+            signUpUrl="/register"
+            forceRedirectUrl={redirectUrl}
+            appearance={{
+              variables: {
+                colorPrimary: '#176b59',
+                colorBackground: '#ffffff',
+                colorText: '#17201d',
+                borderRadius: '6px',
+              },
+            }}
+          />
+        ) : (
+          <div className="max-w-md rounded-md border border-feed-border bg-feed-card p-6 text-center">
+            <h1 className="font-display text-2xl font-bold text-feed-text">Local dev session is active</h1>
+            <p className="mt-3 text-sm leading-6 text-feed-text-secondary">
+              Clerk keys are not set, so this machine is using a local development session.
+            </p>
+            <Link
+              to={redirectUrl}
+              className="mx-auto mt-5 flex h-10 w-fit items-center gap-2 rounded-md bg-feed-text px-4 text-sm font-bold text-white transition-colors hover:bg-feed-accent"
+            >
+              Continue
+              <ArrowRight aria-hidden="true" size={16} />
+            </Link>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

@@ -84,7 +84,7 @@ export class GeminiProvider implements ILLMProvider {
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: FEED_RESPONSE_SCHEMA,
-        temperature: 0.9,
+        temperature: 0.75,
       },
     });
     this.continuationModel = genAI.getGenerativeModel({
@@ -92,7 +92,7 @@ export class GeminiProvider implements ILLMProvider {
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: CONTINUATION_RESPONSE_SCHEMA,
-        temperature: 0.9,
+        temperature: 0.8,
       },
     });
     this.imageModel = genAI.getGenerativeModel({
