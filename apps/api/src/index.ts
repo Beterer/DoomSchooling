@@ -15,11 +15,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 const HOST = process.env['HOST'] ?? '0.0.0.0';
+const isProduction = process.env['NODE_ENV'] === 'production';
+const publicOrigin = process.env['PUBLIC_ORIGIN'];
 const clerkPublishableKey = process.env['CLERK_PUBLISHABLE_KEY'];
 const clerkSecretKey = process.env['CLERK_SECRET_KEY'];
 const isClerkConfigured = Boolean(clerkPublishableKey && clerkSecretKey);
 const hasDevAuthBypass =
-  process.env['NODE_ENV'] !== 'production' && process.env['DEV_AUTH_BYPASS'] === 'true';
+  !isProduction && process.env['DEV_AUTH_BYPASS'] === 'true';
 
 if (!isClerkConfigured && !hasDevAuthBypass) {
   throw new Error(
@@ -27,17 +29,27 @@ if (!isClerkConfigured && !hasDevAuthBypass) {
   );
 }
 
+if (isProduction && (!publicOrigin || !publicOrigin.startsWith('https://'))) {
+  throw new Error('PUBLIC_ORIGIN must be an https origin in production');
+}
+
 const fastify = Fastify({
-  logger: {
-    transport: {
-      target: 'pino-pretty',
-      options: { colorize: true },
-    },
-  },
+  logger: isProduction
+    ? true
+    : {
+        transport: {
+          target: 'pino-pretty',
+          options: { colorize: true },
+        },
+      },
+  trustProxy: isProduction,
 });
 
 await fastify.register(cors, {
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: publicOrigin
+    ? [publicOrigin]
+    : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true,
 });
 
 await fastify.register(sensible);
@@ -74,4 +86,10 @@ try {
 } catch (err) {
   fastify.log.error(err);
   process.exit(1);
+}
+
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(signal, () => {
+    void fastify.close().finally(() => process.exit(0));
+  });
 }

@@ -17,7 +17,7 @@ export default function RegisterPage() {
               variables: {
                 colorPrimary: '#176b59',
                 colorBackground: '#ffffff',
-                colorText: '#17201d',
+                colorForeground: '#17201d',
                 borderRadius: '6px',
               },
             }}

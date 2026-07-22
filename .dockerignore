@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+.playwright-mcp
+node_modules
+**/node_modules
+**/dist
+.env
+.env.*
+!.env.example
+uploads
+**/uploads
+*.log
+DEPLOYMENT.md
+cloudflared

@@ -91,6 +91,12 @@ pnpm --filter api dev
 
 To develop without an OpenRouter key, set `LLM_PROVIDER=mock` in `.env` to use hardcoded fixture data.
 
+## Production
+
+Production runs as an isolated Docker Compose stack behind the existing Cloudflare
+Tunnel. See [docs/production.md](docs/production.md) for the topology, release flow,
+VPS setup, rollback, and common operations.
+
 ## API
 
 All feed routes require a valid Clerk session.

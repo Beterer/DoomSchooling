@@ -6,7 +6,9 @@ import {
   useUser as useClerkUser,
 } from '@clerk/react';
 
-const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
+const clerkPublishableKey =
+  window.__DOOMSCHOOLING_CONFIG__?.clerkPublishableKey ||
+  (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined);
 
 export const hasClerk = Boolean(clerkPublishableKey);
 export const hasDevAuthBypass =
