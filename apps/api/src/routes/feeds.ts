@@ -1,14 +1,24 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { GeneratedFeed, Post } from '@doomschooling/shared';
 import { FeedRequestSchema, ContinueFeedRequestSchema } from '@doomschooling/shared';
-import { getAuth } from '@clerk/fastify';
+import { clerkClient, getAuth } from '@clerk/fastify';
 import { resolveProvider } from '../providers/index.js';
 import { ImageService } from '../services/image.service.js';
+import {
+  hasAllowedVerifiedEmail,
+  parseGenerationEmailAllowlist,
+} from '../auth/generation-access.js';
 
 const MAX_CONTINUATIONS_PER_TOPIC = 10;
 const topicContinuationCounts = new Map<string, number>();
 const activeRequests = new Set<string>();
 const activeFeedGenerations = new Map<string, Promise<GeneratedFeed>>();
+const ACCESS_CACHE_TTL_MS = 5 * 60 * 1000;
+
+interface AccessCacheEntry {
+  allowed: boolean;
+  expiresAt: number;
+}
 
 interface FeedsRouteOptions {
   requireAuth?: boolean;
@@ -38,16 +48,65 @@ const feedsRoutes: FastifyPluginAsync<FeedsRouteOptions> = async (fastify, optio
   const provider = resolveProvider();
   const imageService = new ImageService();
   const requireAuth = options.requireAuth ?? true;
+  const emailAllowlist = parseGenerationEmailAllowlist(
+    process.env['GENERATION_EMAIL_ALLOWLIST'],
+  );
+  const accessCache = new Map<string, AccessCacheEntry>();
+
+  if (requireAuth && process.env['NODE_ENV'] === 'production' && emailAllowlist.size === 0) {
+    throw new Error('GENERATION_EMAIL_ALLOWLIST must contain at least one email in production');
+  }
 
   if (requireAuth) {
-    // Require a valid Clerk session for all routes in this plugin
+    // Require a valid Clerk session and a verified allowlisted email for every
+    // route in this plugin. The short cache avoids a Clerk Backend API call on
+    // every continuation while keeping allowlist changes quick to deploy.
     fastify.addHook('preHandler', async (request, reply) => {
       const auth = getAuth(request);
-      if (!auth.userId) {
+      if (!auth.isAuthenticated || !auth.userId) {
         return reply.code(401).send({
           error: {
             code: 'UNAUTHORIZED',
             message: 'Authentication required',
+          },
+        });
+      }
+
+      const cached = accessCache.get(auth.userId);
+      if (cached && cached.expiresAt > Date.now()) {
+        if (cached.allowed) return;
+        return reply.code(403).send({
+          error: {
+            code: 'EMAIL_NOT_ALLOWED',
+            message: 'This account is not allowed to generate feeds',
+          },
+        });
+      }
+
+      let allowed: boolean;
+      try {
+        const user = await clerkClient.users.getUser(auth.userId);
+        allowed = hasAllowedVerifiedEmail(user.emailAddresses, emailAllowlist);
+      } catch (error) {
+        request.log.error({ err: error, userId: auth.userId }, 'Could not verify generation access');
+        return reply.code(503).send({
+          error: {
+            code: 'AUTHORIZATION_UNAVAILABLE',
+            message: 'Could not verify generation access',
+          },
+        });
+      }
+
+      accessCache.set(auth.userId, {
+        allowed,
+        expiresAt: Date.now() + ACCESS_CACHE_TTL_MS,
+      });
+
+      if (!allowed) {
+        return reply.code(403).send({
+          error: {
+            code: 'EMAIL_NOT_ALLOWED',
+            message: 'This account is not allowed to generate feeds',
           },
         });
       }

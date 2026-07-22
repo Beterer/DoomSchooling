@@ -35,7 +35,13 @@ It needs:
 
 - the existing OpenRouter key;
 - Clerk production publishable and secret keys for `doomschooling.org`;
+- `GENERATION_EMAIL_ALLOWLIST`, a comma-separated list of verified Clerk emails
+  allowed to call the feed generation endpoints;
 - the connector token for the existing remotely managed Cloudflare Tunnel.
+
+The allowlist is enforced by the API before any OpenRouter call. Matching is
+case-insensitive and only verified Clerk email addresses count. Authorization
+results are cached for five minutes per user; a normal deploy clears the cache.
 
 The tunnel was originally configured for `http://localhost:5173` on a laptop. The
 same origin URL is kept on the VPS, so the Cloudflare dashboard route does not need
