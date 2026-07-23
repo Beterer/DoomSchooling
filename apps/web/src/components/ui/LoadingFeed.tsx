@@ -35,7 +35,7 @@ export function LoadingFeed({ topic, compact = false }: LoadingFeedProps) {
   return (
     <div aria-live="polite" aria-busy="true">
       <div className="flex items-start gap-3 border-b border-feed-border bg-feed-bg px-5 py-5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-feed-text text-white">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-feed-text text-white shadow-[3px_3px_0_#62d9ff]">
           <MessagesSquare aria-hidden="true" size={18} />
         </span>
         <div className="min-w-0 flex-1">

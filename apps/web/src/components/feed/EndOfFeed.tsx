@@ -12,8 +12,10 @@ export function EndOfFeed({ topics, depth }: EndOfFeedProps) {
 
   return (
     <section className="border-t border-feed-border bg-feed-bg px-5 py-10 sm:px-8">
-      <Compass aria-hidden="true" className="text-feed-signal" size={24} />
-      <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-feed-text">
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0f0] text-feed-signal">
+        <Compass aria-hidden="true" size={22} />
+      </span>
+      <h2 className="mt-4 font-display text-3xl font-black leading-tight tracking-[-0.035em] text-feed-text">
         Follow the next question
       </h2>
       <p className="mt-2 max-w-lg text-sm leading-6 text-feed-text-secondary">
@@ -26,7 +28,7 @@ export function EndOfFeed({ topics, depth }: EndOfFeedProps) {
             key={topic}
             type="button"
             onClick={() => navigate(buildFeedUrl(topic, depth))}
-            className="group flex w-full items-center justify-between gap-4 py-3.5 text-left text-sm font-semibold text-feed-text transition-colors hover:text-feed-accent"
+            className="group flex w-full items-center justify-between gap-4 py-3.5 text-left text-sm font-bold text-feed-text transition-colors hover:text-feed-accent"
           >
             <span>{topic}</span>
             <ArrowRight aria-hidden="true" className="shrink-0 text-feed-text-muted group-hover:text-feed-accent" size={17} />

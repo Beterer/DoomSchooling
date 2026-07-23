@@ -192,19 +192,19 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-feed-bg">
-      <header className="sticky top-16 z-20 border-b border-feed-border bg-feed-bg/95 backdrop-blur-md">
-        <div className="mx-auto flex min-h-16 max-w-[1080px] items-center gap-3 px-4 py-2 sm:px-6">
+      <header className="sticky top-16 z-20 border-b border-feed-border bg-feed-bg/90 backdrop-blur-xl">
+        <div className="mx-auto flex min-h-[4.5rem] max-w-[1120px] items-center gap-3 px-4 py-2 sm:px-6">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-feed-text-secondary transition-colors hover:bg-feed-card-hover hover:text-feed-text"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-transparent text-feed-text-secondary transition-colors hover:border-feed-border hover:bg-white hover:text-feed-text"
             aria-label="Back to home"
             title="Back to home"
           >
             <ArrowLeft aria-hidden="true" size={19} />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate font-display text-xl font-bold leading-tight text-feed-text sm:text-2xl">
+            <h1 className="truncate font-display text-xl font-black tracking-[-0.035em] text-feed-text sm:text-2xl">
               {topicTitle || topic}
             </h1>
             <p className="mt-0.5 font-utility text-xs text-feed-text-muted">
@@ -214,40 +214,71 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1080px] items-start gap-8 px-0 py-0 lg:grid-cols-[220px_minmax(0,720px)] lg:px-6 lg:py-8">
+      <main className="mx-auto grid max-w-[1120px] items-start gap-8 px-0 py-0 lg:grid-cols-[240px_minmax(0,760px)] lg:px-6 lg:py-8">
         <aside className="sticky top-40 hidden lg:block">
-          <p className="font-utility text-xs font-semibold text-feed-text-muted">Seminar rail</p>
-          <div className="mt-4 border-l border-feed-border pl-4">
-            <p className="text-sm font-semibold text-feed-text">{depthLabel}</p>
+          <div className="rounded-2xl border border-feed-border bg-white p-4 shadow-sm">
+          <p className="font-utility text-[10px] font-bold uppercase tracking-[0.14em] text-feed-text-muted">Discussion map</p>
+          <div className="mt-3 rounded-xl bg-feed-bg p-3">
+            <p className="text-sm font-bold text-feed-text">{depthLabel}</p>
             <p className="mt-1 text-sm leading-6 text-feed-text-secondary">
               Round {Math.max(generationRound, 1)} of {MAX_GENERATION_ROUNDS}
             </p>
           </div>
 
           {personas.length > 0 && (
-            <div className="mt-8">
-              <p className="font-utility text-xs font-semibold text-feed-text-muted">Voices</p>
-              <div className="mt-3 space-y-3">
+            <div className="mt-5 border-t border-feed-border pt-4">
+              <p className="font-utility text-[10px] font-bold uppercase tracking-[0.14em] text-feed-text-muted">Who is speaking</p>
+              <div className="mt-3 space-y-2">
                 {personas.map((persona) => (
-                  <div key={persona.id} className="flex items-center gap-2.5">
+                  <div key={persona.id} className="flex items-center gap-2.5 rounded-xl p-2 transition-colors hover:bg-feed-bg">
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-white"
                       style={{ backgroundColor: persona.avatarColor }}
                     >
                       {persona.avatarInitials}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-feed-text">{persona.displayName}</p>
-                      <p className="text-[11px] text-feed-text-muted">{ROLE_LABELS[persona.role]}</p>
+                      <p className="truncate text-xs font-bold text-feed-text">{persona.displayName}</p>
+                      <p className="font-utility text-[9px] font-bold uppercase tracking-wide text-feed-text-muted">{ROLE_LABELS[persona.role]}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
+          </div>
         </aside>
 
-        <section className="min-w-0 overflow-hidden border-x border-feed-border bg-feed-card lg:rounded-md lg:border">
+        <section className="min-w-0 overflow-hidden border-x border-feed-border bg-feed-card shadow-[0_20px_60px_rgba(38,53,90,0.08)] lg:rounded-2xl lg:border">
+          {personas.length > 0 && (
+            <div className="border-b border-feed-border bg-feed-bg/70 px-4 py-3 lg:hidden">
+              <p className="font-utility text-[9px] font-bold uppercase tracking-[0.14em] text-feed-text-muted">
+                Who is speaking
+              </p>
+              <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                {personas.map((persona) => (
+                  <div
+                    key={persona.id}
+                    className="flex shrink-0 items-center gap-2 rounded-xl border border-feed-border bg-white py-1.5 pl-1.5 pr-3"
+                  >
+                    <span
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-[9px] font-black text-white"
+                      style={{ backgroundColor: persona.avatarColor }}
+                    >
+                      {persona.avatarInitials}
+                    </span>
+                    <span>
+                      <span className="block text-[11px] font-bold leading-tight text-feed-text">{persona.displayName}</span>
+                      <span className="block font-utility text-[8px] font-bold uppercase tracking-wide text-feed-text-muted">
+                        {ROLE_LABELS[persona.role]}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {initialLoad.isPending && <LoadingFeed topic={topic} />}
 
           {initialLoad.isError && (

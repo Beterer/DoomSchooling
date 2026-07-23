@@ -10,9 +10,9 @@ const clerkPublishableKey =
   window.__DOOMSCHOOLING_CONFIG__?.clerkPublishableKey ||
   (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined);
 
-export const hasClerk = Boolean(clerkPublishableKey);
 export const hasDevAuthBypass =
   import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH_BYPASS === 'true';
+export const hasClerk = !hasDevAuthBypass && Boolean(clerkPublishableKey);
 
 const DevAuthContext = createContext({
   isLoaded: true,
