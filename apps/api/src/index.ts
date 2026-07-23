@@ -1,15 +1,16 @@
-import { config } from 'dotenv';
-config({ path: new URL('../../../.env', import.meta.url) });
-
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Fastify, { type FastifyError } from 'fastify';
+import Fastify, { LogController, type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import sensible from '@fastify/sensible';
 import { clerkPlugin } from '@clerk/fastify';
 import healthRoutes from './routes/health.js';
 import feedsRoutes from './routes/feeds.js';
+import {
+  shutdownTelemetry,
+  telemetryEnabled,
+} from './telemetry.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -35,15 +36,35 @@ if (isProduction && (!publicOrigin || !publicOrigin.startsWith('https://'))) {
 
 const fastify = Fastify({
   logger: isProduction
-    ? true
+    ? {
+        level: process.env['LOG_LEVEL'] ?? 'info',
+        redact: {
+          paths: [
+            'req.headers.authorization',
+            'req.headers.cookie',
+            'request.headers.authorization',
+            'request.headers.cookie',
+          ],
+          censor: '[Redacted]',
+        },
+      }
     : {
         transport: {
           target: 'pino-pretty',
           options: { colorize: true },
         },
       },
+  logController: new LogController({
+    disableRequestLogging: true,
+  }),
   trustProxy: isProduction,
 });
+
+if (isProduction && !telemetryEnabled) {
+  fastify.log.warn(
+    'OTEL_EXPORTER_OTLP_ENDPOINT is not set or invalid; telemetry stays in container logs only',
+  );
+}
 
 await fastify.register(cors, {
   origin: publicOrigin
@@ -69,9 +90,24 @@ await fastify.register(fastifyStatic, {
 await fastify.register(healthRoutes);
 await fastify.register(feedsRoutes, { requireAuth: !hasDevAuthBypass });
 
+fastify.addHook('onResponse', async (request, reply) => {
+  if (request.routeOptions.url === '/api/health') {
+    return;
+  }
+
+  request.log.info(
+    {
+      req: request,
+      res: reply,
+      responseTime: reply.elapsedTime,
+    },
+    'request completed',
+  );
+});
+
 // Global error handler — always returns { error: { code, message } }
-fastify.setErrorHandler((error: FastifyError, _request, reply) => {
-  fastify.log.error(error);
+fastify.setErrorHandler((error: FastifyError, request, reply) => {
+  request.log.error({ err: error }, 'request failed');
   const statusCode = error.statusCode ?? 500;
   return reply.code(statusCode).send({
     error: {
@@ -85,11 +121,22 @@ try {
   await fastify.listen({ port: PORT, host: HOST });
 } catch (err) {
   fastify.log.error(err);
+  await shutdownTelemetry();
   process.exit(1);
 }
 
+let isShuttingDown = false;
+
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
-    void fastify.close().finally(() => process.exit(0));
+    if (isShuttingDown) {
+      return;
+    }
+
+    isShuttingDown = true;
+    void fastify
+      .close()
+      .then(shutdownTelemetry)
+      .finally(() => process.exit(0));
   });
 }

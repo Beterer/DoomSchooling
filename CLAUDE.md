@@ -96,6 +96,9 @@ VITE_DEV_AUTH_BYPASS=true   # local development only
 GEMINI_API_KEY=...           # only needed for Gemini
 CLERK_PUBLISHABLE_KEY=...
 CLERK_SECRET_KEY=...
+OTEL_EXPORTER_OTLP_ENDPOINT=...  # optional Grafana Cloud OTLP export
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+OTEL_EXPORTER_OTLP_HEADERS=...   # secret; never commit the real value
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/learnfeed
 ```
 

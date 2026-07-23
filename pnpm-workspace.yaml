@@ -4,3 +4,6 @@ packages:
 allowBuilds:
   '@clerk/shared': true
   esbuild: true
+  # Its postinstall only prints dependency-version warnings; the package ships
+  # the generated runtime files, so no build step is needed.
+  protobufjs: false
