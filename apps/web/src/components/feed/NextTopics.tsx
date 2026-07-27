@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { buildFeedUrl, type LearningDepth } from '@/lib/feed';
 
 interface NextTopicsProps {

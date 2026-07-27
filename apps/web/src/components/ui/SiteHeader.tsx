@@ -1,5 +1,5 @@
 import { BookOpenText, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { AppUserButton, useAppAuth, useAppUser } from '@/lib/auth';
 
 export function SiteHeader() {

@@ -1,15 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import type { GeneratedFeed, Persona, Post } from '@doomschooling/shared';
 import { EndOfFeed } from '@/components/feed/EndOfFeed';
 import { Feed } from '@/components/feed/Feed';
+import { FeedReadyNotice } from '@/components/feed/FeedReadyNotice';
+import { WaitingFeed } from '@/components/feed/WaitingFeed';
 import { LoadingFeed } from '@/components/ui/LoadingFeed';
 import { continueFeed, generateFeed } from '@/lib/api';
 import { DEPTH_OPTIONS, parseLearningDepth, type LearningDepth } from '@/lib/feed';
+import {
+  loadFeedCache,
+  loadFeedScrollPosition,
+  saveFeedCache,
+  saveFeedScrollPosition,
+} from '@/lib/feedCache';
 
 const MAX_GENERATION_ROUNDS = 5;
+
+interface ReadyFeed {
+  data: GeneratedFeed;
+  requestKey: string;
+}
+
+function feedRequestKey(topic: string, depth: LearningDepth) {
+  return `${depth}:${topic.trim().toLocaleLowerCase()}`;
+}
 
 const ROLE_LABELS: Record<Persona['role'], string> = {
   expert: 'Expert',
@@ -18,36 +35,6 @@ const ROLE_LABELS: Record<Persona['role'], string> = {
   skeptic: 'Skeptic',
   enthusiast: 'Enthusiast',
 };
-
-interface FeedCache {
-  posts: Post[];
-  personas: Persona[];
-  suggestedNextTopics: string[];
-  feedId: string;
-  topicTitle: string;
-  generationRound: number;
-}
-
-function cacheKey(topic: string, depth: LearningDepth) {
-  return `feed_cache:${depth}:${topic}`;
-}
-
-function loadCache(topic: string, depth: LearningDepth): FeedCache | null {
-  try {
-    const raw = sessionStorage.getItem(cacheKey(topic, depth));
-    return raw ? (JSON.parse(raw) as FeedCache) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveCache(topic: string, depth: LearningDepth, data: FeedCache) {
-  try {
-    sessionStorage.setItem(cacheKey(topic, depth), JSON.stringify(data));
-  } catch {
-    // A full or unavailable sessionStorage should not block learning.
-  }
-}
 
 export default function FeedPage() {
   const [searchParams] = useSearchParams();
@@ -61,10 +48,12 @@ export default function FeedPage() {
   const [feedId, setFeedId] = useState('');
   const [topicTitle, setTopicTitle] = useState('');
   const [generationRound, setGenerationRound] = useState(0);
+  const [readyFeed, setReadyFeed] = useState<ReadyFeed | null>(null);
   const generationRoundRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingMore = useRef(false);
   const initialRequestKeyRef = useRef<string | null>(null);
+  const pendingScrollRestoreRef = useRef<number | null>(null);
   const hasReachedLimit = generationRound >= MAX_GENERATION_ROUNDS;
 
   const postsRef = useRef(posts);
@@ -78,14 +67,24 @@ export default function FeedPage() {
 
   const initialLoad = useMutation({
     mutationFn: generateFeed,
-    onSuccess: (data: GeneratedFeed) => {
-      setPosts(data.posts);
-      setSuggestedNextTopics(data.suggestedNextTopics);
-      setFeedId(data.id);
-      setTopicTitle(data.topicTitle);
-      setGenerationRound(1);
-      generationRoundRef.current = 1;
-      setPersonas(extractPersonas(data.posts));
+    onSuccess: (data: GeneratedFeed, request) => {
+      const requestDepth = request.depth ?? 'intermediate';
+      const generatedPersonas = extractPersonas(data.posts);
+      saveFeedCache(request.topic, requestDepth, {
+        posts: data.posts,
+        personas: generatedPersonas,
+        suggestedNextTopics: data.suggestedNextTopics,
+        feedId: data.id,
+        topicTitle: data.topicTitle,
+        generationRound: 1,
+      });
+      saveFeedScrollPosition(request.topic, requestDepth, 0);
+
+      const completedRequestKey = feedRequestKey(request.topic, requestDepth);
+      const activeRequestKey = feedRequestKey(topicRef.current, depthRef.current);
+      if (completedRequestKey === activeRequestKey) {
+        setReadyFeed({ data, requestKey: completedRequestKey });
+      }
     },
   });
 
@@ -111,9 +110,12 @@ export default function FeedPage() {
       return;
     }
 
-    const cached = loadCache(topic, depth);
+    const requestKey = feedRequestKey(topic, depth);
+    const cached = loadFeedCache(topic, depth);
     if (cached) {
-      initialRequestKeyRef.current = cacheKey(topic, depth);
+      initialRequestKeyRef.current = requestKey;
+      pendingScrollRestoreRef.current = loadFeedScrollPosition(topic, depth);
+      setReadyFeed(null);
       setPosts(cached.posts);
       setPersonas(cached.personas);
       setSuggestedNextTopics(cached.suggestedNextTopics);
@@ -124,10 +126,11 @@ export default function FeedPage() {
       return;
     }
 
-    const requestKey = cacheKey(topic, depth);
     if (initialRequestKeyRef.current === requestKey) return;
     initialRequestKeyRef.current = requestKey;
+    pendingScrollRestoreRef.current = 0;
 
+    setReadyFeed(null);
     setPosts([]);
     setPersonas([]);
     setSuggestedNextTopics([]);
@@ -135,12 +138,13 @@ export default function FeedPage() {
     setTopicTitle('');
     setGenerationRound(0);
     generationRoundRef.current = 0;
+    window.scrollTo({ top: 0 });
     initialLoad.mutate({ topic, depth });
   }, [depth, topic]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (posts.length > 0 && feedId) {
-      saveCache(topic, depth, {
+      saveFeedCache(topic, depth, {
         posts,
         personas,
         suggestedNextTopics,
@@ -150,6 +154,79 @@ export default function FeedPage() {
       });
     }
   }, [depth, feedId, generationRound, personas, posts, suggestedNextTopics, topic, topicTitle]);
+
+  useEffect(() => {
+    if (!feedId || posts.length === 0 || pendingScrollRestoreRef.current === null) return;
+
+    const savedPosition = pendingScrollRestoreRef.current;
+    pendingScrollRestoreRef.current = null;
+    let innerFrame = 0;
+    const outerFrame = window.requestAnimationFrame(() => {
+      innerFrame = window.requestAnimationFrame(() => {
+        window.scrollTo({ top: savedPosition });
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(outerFrame);
+      window.cancelAnimationFrame(innerFrame);
+    };
+  }, [feedId, posts.length]);
+
+  useEffect(() => {
+    if (!topic || !feedId || posts.length === 0) return;
+
+    const savePosition = () => {
+      saveFeedScrollPosition(topic, depth, window.scrollY);
+    };
+    let saveTimer = 0;
+    const queueSavePosition = () => {
+      window.clearTimeout(saveTimer);
+      saveTimer = window.setTimeout(savePosition, 250);
+    };
+    const saveWhenHidden = () => {
+      if (document.visibilityState === 'hidden') savePosition();
+    };
+
+    window.addEventListener('scroll', queueSavePosition, { passive: true });
+    window.addEventListener('pagehide', savePosition);
+    document.addEventListener('visibilitychange', saveWhenHidden);
+
+    return () => {
+      window.clearTimeout(saveTimer);
+      window.removeEventListener('scroll', queueSavePosition);
+      window.removeEventListener('pagehide', savePosition);
+      document.removeEventListener('visibilitychange', saveWhenHidden);
+    };
+  }, [depth, feedId, posts.length, topic]);
+
+  useEffect(() => {
+    const activeReadyFeed =
+      readyFeed?.requestKey === feedRequestKey(topic, depth) ? readyFeed.data : null;
+    if (!activeReadyFeed) return;
+
+    const previousTitle = document.title;
+    document.title = `Ready: ${topic} | DoomSchooling`;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [depth, readyFeed, topic]);
+
+  function openReadyFeed() {
+    if (!readyFeed || readyFeed.requestKey !== feedRequestKey(topic, depth)) return;
+
+    const generatedPersonas = extractPersonas(readyFeed.data.posts);
+    setPosts(readyFeed.data.posts);
+    setPersonas(generatedPersonas);
+    setSuggestedNextTopics(readyFeed.data.suggestedNextTopics);
+    setFeedId(readyFeed.data.id);
+    setTopicTitle(readyFeed.data.topicTitle);
+    setGenerationRound(1);
+    generationRoundRef.current = 1;
+    pendingScrollRestoreRef.current = 0;
+    setReadyFeed(null);
+    window.scrollTo({ top: 0 });
+  }
 
   const handleLoadMore = useCallback(() => {
     if (
@@ -189,6 +266,8 @@ export default function FeedPage() {
   if (!topic) return null;
 
   const depthLabel = DEPTH_OPTIONS.find((option) => option.value === depth)?.label ?? 'Go further';
+  const readyFeedForRequest =
+    readyFeed?.requestKey === feedRequestKey(topic, depth) ? readyFeed.data : null;
 
   return (
     <div className="min-h-screen bg-feed-bg">
@@ -221,7 +300,9 @@ export default function FeedPage() {
           <div className="mt-3 rounded-xl bg-feed-bg p-3">
             <p className="text-sm font-bold text-feed-text">{depthLabel}</p>
             <p className="mt-1 text-sm leading-6 text-feed-text-secondary">
-              Round {Math.max(generationRound, 1)} of {MAX_GENERATION_ROUNDS}
+              {posts.length > 0
+                ? `Round ${Math.max(generationRound, 1)} of ${MAX_GENERATION_ROUNDS}`
+                : 'Five voices are getting ready'}
             </p>
           </div>
 
@@ -249,7 +330,7 @@ export default function FeedPage() {
           </div>
         </aside>
 
-        <section className="min-w-0 overflow-hidden border-x border-feed-border bg-feed-card shadow-[0_20px_60px_rgba(38,53,90,0.08)] lg:rounded-2xl lg:border">
+        <section className="min-w-0 overflow-clip border-x border-feed-border bg-feed-card shadow-[0_20px_60px_rgba(38,53,90,0.08)] lg:rounded-2xl lg:border">
           {personas.length > 0 && (
             <div className="border-b border-feed-border bg-feed-bg/70 px-4 py-3 lg:hidden">
               <p className="font-utility text-[9px] font-bold uppercase tracking-[0.14em] text-feed-text-muted">
@@ -279,7 +360,13 @@ export default function FeedPage() {
             </div>
           )}
 
-          {initialLoad.isPending && <LoadingFeed topic={topic} />}
+          {posts.length === 0 && (initialLoad.isPending || readyFeedForRequest) && (
+            <WaitingFeed
+              requestedTopic={topic}
+              depth={depth}
+              isReady={Boolean(readyFeedForRequest)}
+            />
+          )}
 
           {initialLoad.isError && (
             <div className="m-4 rounded-md border border-red-200 bg-red-50 p-6 text-center">
@@ -289,7 +376,10 @@ export default function FeedPage() {
               </p>
               <button
                 type="button"
-                onClick={() => initialLoad.mutate({ topic, depth })}
+                onClick={() => {
+                  setReadyFeed(null);
+                  initialLoad.mutate({ topic, depth });
+                }}
                 className="mx-auto mt-5 flex h-10 items-center gap-2 rounded-md bg-feed-text px-4 text-sm font-bold text-white transition-colors hover:bg-feed-accent"
               >
                 <RefreshCw aria-hidden="true" size={16} />
@@ -306,39 +396,43 @@ export default function FeedPage() {
             />
           )}
 
-          {hasReachedLimit ? (
-            posts.length > 0 && <EndOfFeed topics={suggestedNextTopics} depth={depth} />
-          ) : (
-            <>
-              <div ref={sentinelRef} className="h-px" />
+          {posts.length > 0 && (
+            hasReachedLimit ? (
+              <EndOfFeed topics={suggestedNextTopics} depth={depth} />
+            ) : (
+              <>
+                <div ref={sentinelRef} className="h-px" />
 
-              {loadMore.isPending && <LoadingFeed compact topic={topic} />}
+                {loadMore.isPending && <LoadingFeed compact topic={topic} />}
 
-              {loadMore.isError && (
-                <div className="border-t border-feed-border p-5 text-center">
-                  <p className="text-sm text-feed-text-secondary">The discussion paused before the next round.</p>
-                  <button
-                    type="button"
-                    onClick={handleLoadMore}
-                    className="mx-auto mt-3 flex h-9 items-center gap-2 rounded-md border border-feed-border px-3 text-sm font-semibold text-feed-text transition-colors hover:bg-feed-card-hover"
-                  >
-                    <RefreshCw aria-hidden="true" size={15} />
-                    Continue
-                  </button>
-                </div>
-              )}
+                {loadMore.isError && (
+                  <div className="border-t border-feed-border p-5 text-center">
+                    <p className="text-sm text-feed-text-secondary">The discussion paused before the next round.</p>
+                    <button
+                      type="button"
+                      onClick={handleLoadMore}
+                      className="mx-auto mt-3 flex h-9 items-center gap-2 rounded-md border border-feed-border px-3 text-sm font-semibold text-feed-text transition-colors hover:bg-feed-card-hover"
+                    >
+                      <RefreshCw aria-hidden="true" size={15} />
+                      Continue
+                    </button>
+                  </div>
+                )}
 
-              {posts.length > 0 && !loadMore.isPending && !loadMore.isError && (
-                <Feed
-                  feed={{ id: feedId, topic, topicTitle, posts: [], suggestedNextTopics, generatedAt: '' }}
-                  depth={depth}
-                  hidePostList
-                />
-              )}
-            </>
+                {!loadMore.isPending && !loadMore.isError && (
+                  <Feed
+                    feed={{ id: feedId, topic, topicTitle, posts: [], suggestedNextTopics, generatedAt: '' }}
+                    depth={depth}
+                    hidePostList
+                  />
+                )}
+              </>
+            )
           )}
         </section>
       </main>
+
+      {readyFeedForRequest && <FeedReadyNotice topic={topic} onOpen={openReadyFeed} />}
     </div>
   );
 }

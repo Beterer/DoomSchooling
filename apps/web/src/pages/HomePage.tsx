@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ArrowUpRight, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { TopicInput } from '@/components/ui/TopicInput';
 import { SiteHeader } from '@/components/ui/SiteHeader';
 import { TOPIC_POOL } from '@/data/topics';

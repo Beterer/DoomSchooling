@@ -1,6 +1,6 @@
 import { SignUp } from '@clerk/react';
 import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { SiteHeader } from '@/components/ui/SiteHeader';
 import { hasClerk } from '@/lib/auth';
 
