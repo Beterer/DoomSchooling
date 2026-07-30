@@ -10,10 +10,20 @@ interface WaitingFeedProps {
   isReady: boolean;
 }
 
+function shuffle<T>(items: readonly T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export function WaitingFeed({ requestedTopic, depth, isReady }: WaitingFeedProps) {
-  const [selectedFeedId, setSelectedFeedId] = useState(WAITING_FEEDS[0].id);
-  const selectedFeed =
-    WAITING_FEEDS.find((feed) => feed.id === selectedFeedId) ?? WAITING_FEEDS[0];
+  // Shuffle once per mount so the temporary feeds aren't always in the same order.
+  const [feeds] = useState(() => shuffle(WAITING_FEEDS));
+  const [selectedFeedId, setSelectedFeedId] = useState(() => feeds[0].id);
+  const selectedFeed = feeds.find((feed) => feed.id === selectedFeedId) ?? feeds[0];
 
   return (
     <div className={isReady ? 'pb-28 sm:pb-24' : ''} aria-busy={!isReady}>
@@ -51,11 +61,11 @@ export function WaitingFeed({ requestedTopic, depth, isReady }: WaitingFeedProps
             </p>
           </div>
           <span className="font-utility text-[10px] text-feed-text-muted">
-            {WAITING_FEEDS.length} topics · scroll to browse
+            {feeds.length} topics · scroll to browse
           </span>
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {WAITING_FEEDS.map((feed) => {
+          {feeds.map((feed) => {
             const isSelected = feed.id === selectedFeed.id;
 
             return (
