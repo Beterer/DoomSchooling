@@ -1,4 +1,12 @@
-import type { FeedRequest, GeneratedFeed, ContinueFeedRequest, FeedContinuation } from '@doomschooling/shared';
+import type {
+  FeedRequest,
+  GeneratedFeed,
+  ContinueFeedRequest,
+  FeedContinuation,
+  BulbBooking,
+  BulbBookingEntry,
+  BulbBookingReceipt,
+} from '@doomschooling/shared';
 
 type ApiError = {
   error: {
@@ -39,5 +47,21 @@ export async function continueFeed(request: ContinueFeedRequest): Promise<FeedCo
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
+  });
+}
+
+export async function bookBulbVisit(booking: BulbBooking): Promise<BulbBookingReceipt> {
+  return fetchApi<BulbBookingReceipt>('/api/becuri', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(booking),
+  });
+}
+
+export async function fetchBulbBookings(token: string): Promise<BulbBookingEntry[]> {
+  // The token travels in a header so it never lands in the API request log.
+  return fetchApi<BulbBookingEntry[]>('/api/becuri/answers', {
+    method: 'GET',
+    headers: { 'x-becuri-token': token },
   });
 }

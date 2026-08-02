@@ -7,6 +7,7 @@ import sensible from '@fastify/sensible';
 import { clerkPlugin } from '@clerk/fastify';
 import healthRoutes from './routes/health.js';
 import feedsRoutes from './routes/feeds.js';
+import becuriRoutes from './routes/becuri.js';
 import {
   shutdownTelemetry,
   telemetryEnabled,
@@ -89,6 +90,8 @@ await fastify.register(fastifyStatic, {
 });
 await fastify.register(healthRoutes);
 await fastify.register(feedsRoutes, { requireAuth: !hasDevAuthBypass });
+// Deliberately public: /becuri has to work for someone without an account.
+await fastify.register(becuriRoutes);
 
 fastify.addHook('onResponse', async (request, reply) => {
   if (request.routeOptions.url === '/api/health') {
