@@ -8,6 +8,11 @@ import type {
   GeneratedFeedSchema,
   ContinueFeedRequestSchema,
   FeedContinuationSchema,
+  BurntBulbCountSchema,
+  BulbExtraSchema,
+  BulbBookingSchema,
+  BulbBookingEntrySchema,
+  BulbBookingReceiptSchema,
 } from './schemas.js';
 
 // Derive all types from Zod schemas — single source of truth.
@@ -21,3 +26,8 @@ export type FeedRequest = z.infer<typeof FeedRequestSchema>;
 export type GeneratedFeed = z.infer<typeof GeneratedFeedSchema>;
 export type ContinueFeedRequest = z.infer<typeof ContinueFeedRequestSchema>;
 export type FeedContinuation = z.infer<typeof FeedContinuationSchema>;
+export type BurntBulbCount = z.infer<typeof BurntBulbCountSchema>;
+export type BulbExtra = z.infer<typeof BulbExtraSchema>;
+export type BulbBooking = z.infer<typeof BulbBookingSchema>;
+export type BulbBookingEntry = z.infer<typeof BulbBookingEntrySchema>;
+export type BulbBookingReceipt = z.infer<typeof BulbBookingReceiptSchema>;
