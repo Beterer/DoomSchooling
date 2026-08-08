@@ -3,8 +3,6 @@ import HomePage from './pages/HomePage';
 import FeedPage from './pages/FeedPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import BecuriPage from './pages/BecuriPage';
-import BecuriAdminPage from './pages/BecuriAdminPage';
 import { SiteHeader } from './components/ui/SiteHeader';
 import { useAppAuth } from './lib/auth';
 
@@ -36,9 +34,6 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        {/* Public on purpose: she has no account and never needs one. */}
-        <Route path="/becuri" element={<BecuriPage />} />
-        <Route path="/becuri/admin" element={<BecuriAdminPage />} />
         <Route
           path="/feed"
           element={

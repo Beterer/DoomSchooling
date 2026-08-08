@@ -26,10 +26,6 @@ ENV PORT=3000
 WORKDIR /app
 COPY --from=build --chown=node:node /output/ ./
 
-# Docker copies this directory's ownership when it initialises the named volume,
-# so the unprivileged node user can still write the /becuri booking log.
-RUN mkdir -p /app/data && chown node:node /app/data
-
 USER node
 EXPOSE 3000
 
