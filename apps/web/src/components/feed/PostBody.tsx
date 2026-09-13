@@ -18,7 +18,7 @@ const markdownComponents: Components = {
   code: ({ children, className }) => {
     if (!className) {
       return (
-        <code className="rounded bg-[#e5ece8] px-1.5 py-0.5 font-utility text-[13px] text-[#115e50]">
+        <code className="rounded bg-[#e5ece8] px-1.5 py-0.5 font-utility text-[13px] text-[#115e50] dark:bg-[#1b2a27] dark:text-[#7fd6c2]">
           {children}
         </code>
       );

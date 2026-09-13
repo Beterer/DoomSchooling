@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import type { GeneratedFeed } from '@doomschooling/shared';
 import type { LearningDepth } from '@/lib/feed';
+import { buildThreadTree } from '@/lib/thread';
 import { NextTopics } from './NextTopics';
-import { Post } from './Post';
+import { ThreadNode } from './ThreadNode';
 
 interface FeedProps {
   feed: GeneratedFeed;
@@ -11,17 +13,15 @@ interface FeedProps {
 }
 
 export function Feed({ feed, depth, hideNextTopics, hidePostList }: FeedProps) {
+  const threads = useMemo(() => buildThreadTree(feed.posts), [feed.posts]);
+
   return (
     <div>
       {!hidePostList && (
         <div>
-          {feed.posts.map((post, index) => {
-            const nextPost = feed.posts[index + 1];
-            const isThreaded =
-              nextPost !== undefined && nextPost.depth > 0 && post.depth < nextPost.depth;
-
-            return <Post key={post.id} post={post} isThreaded={isThreaded} />;
-          })}
+          {threads.map((node) => (
+            <ThreadNode key={node.post.id} feedId={feed.id} node={node} level={0} />
+          ))}
         </div>
       )}
 

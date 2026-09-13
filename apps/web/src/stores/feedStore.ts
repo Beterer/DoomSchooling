@@ -8,9 +8,10 @@ interface Comment {
 }
 
 interface FeedStore {
+  /** Keys are `${feedId}:${postId}`, since post ids repeat across feeds. */
   collapsedThreads: Set<string>;
-  toggleThread: (postId: string) => void;
-  isCollapsed: (postId: string) => boolean;
+  toggleThread: (threadKey: string) => void;
+  isCollapsed: (threadKey: string) => boolean;
 
   upvotedPosts: Set<string>;
   toggleUpvote: (postId: string) => void;
@@ -26,17 +27,17 @@ interface FeedStore {
 
 export const useFeedStore = create<FeedStore>((set, get) => ({
   collapsedThreads: new Set(),
-  toggleThread: (postId: string) =>
+  toggleThread: (threadKey: string) =>
     set((state) => {
       const next = new Set(state.collapsedThreads);
-      if (next.has(postId)) {
-        next.delete(postId);
+      if (next.has(threadKey)) {
+        next.delete(threadKey);
       } else {
-        next.add(postId);
+        next.add(threadKey);
       }
       return { collapsedThreads: next };
     }),
-  isCollapsed: (postId: string) => get().collapsedThreads.has(postId),
+  isCollapsed: (threadKey: string) => get().collapsedThreads.has(threadKey),
 
   upvotedPosts: new Set(),
   toggleUpvote: (postId: string) =>

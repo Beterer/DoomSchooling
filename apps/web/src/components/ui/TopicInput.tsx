@@ -36,7 +36,7 @@ export function TopicInput({ value, depth, onChange, onDepthChange, onSubmit }: 
         <button
           type="submit"
           disabled={!value.trim()}
-          className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-feed-text px-4 text-sm font-bold text-white shadow-[3px_3px_0_#62d9ff] transition-all hover:-translate-y-0.5 hover:bg-feed-accent disabled:cursor-not-allowed disabled:opacity-40 sm:px-5"
+          className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-feed-text px-4 text-sm font-bold text-feed-text-inverse shadow-[3px_3px_0_#62d9ff] transition-all hover:-translate-y-0.5 hover:bg-feed-accent disabled:cursor-not-allowed disabled:opacity-40 sm:px-5"
         >
           <span className="hidden sm:inline">Build my feed</span>
           <ArrowRight aria-hidden="true" size={18} />
@@ -55,7 +55,7 @@ export function TopicInput({ value, depth, onChange, onDepthChange, onSubmit }: 
               title={option.description}
               className={`min-h-9 rounded-lg px-2.5 text-xs font-semibold transition-all sm:px-3 ${
                 depth === option.value
-                  ? 'bg-white text-feed-accent shadow-sm ring-1 ring-feed-border'
+                  ? 'bg-feed-card text-feed-accent shadow-sm ring-1 ring-feed-border'
                   : 'text-feed-text-muted hover:bg-feed-card-hover hover:text-feed-text'
               }`}
             >

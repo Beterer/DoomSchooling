@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-feed-bg: #f5f7fb;
   --color-feed-card: #ffffff;
@@ -9,6 +11,7 @@
   --color-feed-text: #172033;
   --color-feed-text-secondary: #526078;
   --color-feed-text-muted: #7e899d;
+  --color-feed-text-inverse: #ffffff;
   --color-feed-accent: #3457d5;
   --color-feed-accent-hover: #2947b7;
   --color-feed-signal: #ff5c5c;
@@ -18,7 +21,25 @@
   --font-utility: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", monospace;
 }
 
+.dark {
+  --color-feed-bg: #0b1020;
+  --color-feed-card: #121829;
+  --color-feed-card-hover: #1a2135;
+  --color-feed-border: #283149;
+  --color-feed-border-light: #1e2639;
+  --color-feed-text: #e6ebf5;
+  --color-feed-text-secondary: #aab4c8;
+  --color-feed-text-muted: #7f8aa0;
+  --color-feed-text-inverse: #0b1020;
+  --color-feed-accent: #7b96ff;
+  --color-feed-accent-hover: #9aafff;
+  --color-feed-signal: #ff6b6b;
+  --color-feed-gold: #e8b34a;
+  color-scheme: dark;
+}
+
 :root {
+  color-scheme: light;
   color: var(--color-feed-text);
   background: var(--color-feed-bg);
   font-family: var(--font-sans);
@@ -49,6 +70,10 @@ body::before {
   mask-image: linear-gradient(to bottom, black, transparent 55%);
 }
 
+.dark body::before {
+  background-image: radial-gradient(circle at 1px 1px, rgb(230 235 245 / 5%) 1px, transparent 0);
+}
+
 button,
 input,
 textarea {
@@ -61,7 +86,7 @@ a {
 }
 
 ::selection {
-  color: white;
+  color: var(--color-feed-text-inverse);
   background: var(--color-feed-accent);
 }
 
@@ -90,17 +115,35 @@ a {
   transform: rotate(-1.5deg);
 }
 
+.dark .hero-mark::after {
+  background: rgb(255 209 102 / 38%);
+}
+
 .persona-post {
   --persona-color: #3457d5;
   border-left-color: var(--persona-color);
 }
 
 .persona-post:hover {
-  background: color-mix(in srgb, var(--persona-color) 4%, white);
+  background: color-mix(in srgb, var(--persona-color) 4%, var(--color-feed-card));
+}
+
+.dark .persona-post:hover {
+  background: color-mix(in srgb, var(--persona-color) 8%, var(--color-feed-card));
 }
 
 .persona-wash {
-  background: color-mix(in srgb, var(--persona-color) 9%, white);
+  background: color-mix(in srgb, var(--persona-color) 9%, var(--color-feed-card));
+}
+
+.persona-chip {
+  color: var(--persona-color);
+  background: color-mix(in srgb, var(--persona-color) 8%, transparent);
+}
+
+.dark .persona-chip {
+  color: color-mix(in srgb, var(--persona-color) 55%, white);
+  background: color-mix(in srgb, var(--persona-color) 20%, transparent);
 }
 
 .persona-ring {
@@ -158,6 +201,17 @@ a {
   );
   background-size: 24px 24px;
   backdrop-filter: blur(10px);
+}
+
+.dark .temporary-feed-band {
+  background-color: rgb(66 48 6 / 94%);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgb(255 209 102 / 7%) 0,
+    rgb(255 209 102 / 7%) 8px,
+    transparent 8px,
+    transparent 16px
+  );
 }
 
 .temporary-feed-band--loading {

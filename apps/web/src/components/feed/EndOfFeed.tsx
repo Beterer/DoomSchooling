@@ -12,7 +12,7 @@ export function EndOfFeed({ topics, depth }: EndOfFeedProps) {
 
   return (
     <section className="border-t border-feed-border bg-feed-bg px-5 py-10 sm:px-8">
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0f0] text-feed-signal">
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0f0] text-feed-signal dark:bg-feed-signal/15">
         <Compass aria-hidden="true" size={22} />
       </span>
       <h2 className="mt-4 font-display text-3xl font-black leading-tight tracking-[-0.035em] text-feed-text">

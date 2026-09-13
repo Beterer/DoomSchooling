@@ -27,9 +27,9 @@ export function WaitingFeed({ requestedTopic, depth, isReady }: WaitingFeedProps
 
   return (
     <div className={isReady ? 'pb-28 sm:pb-24' : ''} aria-busy={!isReady}>
-      <section className="border-b border-feed-border bg-[linear-gradient(135deg,#eef2ff_0%,#f7fbff_55%,#effcf8_100%)] px-4 py-5 sm:px-6">
+      <section className="border-b border-feed-border bg-[linear-gradient(135deg,#eef2ff_0%,#f7fbff_55%,#effcf8_100%)] dark:bg-[linear-gradient(135deg,#151c38_0%,#111829_55%,#0f2126_100%)] px-4 py-5 sm:px-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-feed-text text-white shadow-[3px_3px_0_#62d9ff]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-feed-text text-feed-text-inverse shadow-[3px_3px_0_#62d9ff]">
             {isReady ? (
               <Check aria-hidden="true" size={20} strokeWidth={3} />
             ) : (
@@ -52,7 +52,7 @@ export function WaitingFeed({ requestedTopic, depth, isReady }: WaitingFeedProps
         </div>
       </section>
 
-      <section className="border-b border-feed-border bg-white px-4 py-4 sm:px-6">
+      <section className="border-b border-feed-border bg-feed-card px-4 py-4 sm:px-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <BookOpenText aria-hidden="true" className="text-feed-accent" size={16} />
@@ -75,8 +75,8 @@ export function WaitingFeed({ requestedTopic, depth, isReady }: WaitingFeedProps
                 onClick={() => setSelectedFeedId(feed.id)}
                 className={`shrink-0 rounded-full border px-3.5 py-2 text-left text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-feed-accent ${
                   isSelected
-                    ? 'border-feed-text bg-feed-text text-white shadow-[2px_2px_0_#62d9ff]'
-                    : 'border-feed-border bg-feed-bg text-feed-text-secondary hover:border-feed-text-muted hover:bg-white'
+                    ? 'border-feed-text bg-feed-text text-feed-text-inverse shadow-[2px_2px_0_#62d9ff]'
+                    : 'border-feed-border bg-feed-bg text-feed-text-secondary hover:border-feed-text-muted hover:bg-feed-card'
                 }`}
                 aria-pressed={isSelected}
               >
@@ -93,7 +93,7 @@ export function WaitingFeed({ requestedTopic, depth, isReady }: WaitingFeedProps
         }`}
         aria-live="polite"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-feed-text text-white">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-feed-text text-feed-text-inverse">
           {isReady ? (
             <Check aria-hidden="true" size={17} strokeWidth={3} />
           ) : (
