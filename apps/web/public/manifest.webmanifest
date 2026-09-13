@@ -4,8 +4,8 @@
   "description": "Learn any topic through a lively, AI-generated conversation.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f7f5",
-  "theme_color": "#f4f7f5",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
   "icons": [
     {
       "src": "/favicon.ico",

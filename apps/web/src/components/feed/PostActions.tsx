@@ -111,7 +111,7 @@ export function PostActions({ postId, votes }: PostActionsProps) {
           {shareStatus !== 'idle' && (
             <span
               role="status"
-              className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-feed-text px-2.5 py-1 text-[11px] text-white shadow-md"
+              className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-feed-text px-2.5 py-1 text-[11px] text-feed-text-inverse shadow-md"
             >
               {shareStatus === 'copied' ? 'Link copied' : 'Copy failed'}
             </span>
@@ -146,7 +146,7 @@ export function PostActions({ postId, votes }: PostActionsProps) {
             <button
               type="submit"
               disabled={!commentText.trim()}
-              className="h-8 rounded-md bg-feed-accent px-3 text-xs font-bold text-white transition-colors hover:bg-feed-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-8 rounded-md bg-feed-accent px-3 text-xs font-bold text-feed-text-inverse transition-colors hover:bg-feed-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
             >
               Comment
             </button>

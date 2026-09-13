@@ -1,10 +1,37 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ComponentProps, type ReactNode } from 'react';
 import {
   ClerkProvider,
   UserButton as ClerkUserButton,
   useAuth as useClerkAuth,
   useUser as useClerkUser,
 } from '@clerk/react';
+import { useThemeStore, type Theme } from '@/lib/theme';
+
+type ClerkAppearance = NonNullable<ComponentProps<typeof ClerkProvider>['appearance']>;
+
+const CLERK_APPEARANCE: Record<Theme, ClerkAppearance> = {
+  light: {
+    variables: {
+      colorPrimary: '#176b59',
+      colorBackground: '#ffffff',
+      colorForeground: '#17201d',
+      borderRadius: '6px',
+    },
+  },
+  dark: {
+    variables: {
+      colorPrimary: '#4fbf9f',
+      colorPrimaryForeground: '#0b1020',
+      colorBackground: '#121829',
+      colorForeground: '#e6ebf5',
+      colorMutedForeground: '#aab4c8',
+      colorNeutral: '#e6ebf5',
+      colorInput: '#0b1020',
+      colorInputForeground: '#e6ebf5',
+      borderRadius: '6px',
+    },
+  },
+};
 
 const clerkPublishableKey =
   window.__DOOMSCHOOLING_CONFIG__?.clerkPublishableKey ||
@@ -27,8 +54,14 @@ const devUser = {
 };
 
 export function AppAuthProvider({ children }: { children: ReactNode }) {
+  const theme = useThemeStore((state) => state.theme);
+
   if (hasClerk) {
-    return <ClerkProvider publishableKey={clerkPublishableKey!}>{children}</ClerkProvider>;
+    return (
+      <ClerkProvider publishableKey={clerkPublishableKey!} appearance={CLERK_APPEARANCE[theme]}>
+        {children}
+      </ClerkProvider>
+    );
   }
 
   if (!hasDevAuthBypass) {
@@ -63,7 +96,7 @@ export function AppUserButton() {
 
   return (
     <span
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-feed-text text-xs font-bold text-white"
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-feed-text text-xs font-bold text-feed-text-inverse"
       title="Local dev session"
     >
       LD

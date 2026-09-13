@@ -1,5 +1,6 @@
 import { BookOpenText, LogIn } from 'lucide-react';
 import { Link } from 'react-router';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { AppUserButton, useAppAuth, useAppUser } from '@/lib/auth';
 
 export function SiteHeader() {
@@ -14,15 +15,16 @@ export function SiteHeader() {
           className="group flex items-center gap-2.5 rounded-xl text-feed-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-feed-accent focus-visible:ring-offset-4"
           aria-label="DoomSchooling home"
         >
-          <span className="flex h-9 w-9 rotate-[-3deg] items-center justify-center rounded-xl bg-feed-text text-white shadow-[3px_3px_0_#62d9ff] transition-transform group-hover:rotate-0">
+          <span className="flex h-9 w-9 rotate-[-3deg] items-center justify-center rounded-xl bg-feed-text text-feed-text-inverse shadow-[3px_3px_0_#62d9ff] transition-transform group-hover:rotate-0">
             <BookOpenText aria-hidden="true" size={18} strokeWidth={2.2} />
           </span>
           <span className="font-display text-lg font-black tracking-[-0.035em] sm:text-xl">DoomSchooling</span>
         </Link>
 
-        {isLoaded && (
-          <div className="flex items-center gap-3">
-            {isSignedIn ? (
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          {isLoaded &&
+            (isSignedIn ? (
               <>
                 <span className="hidden max-w-48 truncate text-sm text-feed-text-secondary sm:block">
                   {user?.firstName ?? user?.primaryEmailAddress?.emailAddress}
@@ -37,9 +39,8 @@ export function SiteHeader() {
                 <LogIn aria-hidden="true" size={16} />
                 Sign in
               </Link>
-            )}
-          </div>
-        )}
+            ))}
+        </div>
       </div>
     </header>
   );

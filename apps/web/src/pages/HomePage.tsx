@@ -30,7 +30,7 @@ export default function HomePage() {
       <main className="mx-auto max-w-[1180px] px-4 sm:px-6">
         <section className="grid min-h-[calc(100vh-10rem)] items-center gap-12 py-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.75fr)] lg:gap-16 lg:py-16">
           <div className="max-w-[700px]">
-            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-feed-border bg-white px-3 py-1.5 text-xs font-bold text-feed-accent shadow-sm">
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-feed-border bg-feed-card px-3 py-1.5 text-xs font-bold text-feed-accent shadow-sm">
               <Sparkles aria-hidden="true" size={14} />
               Your curiosity, with a better algorithm
             </div>
@@ -58,7 +58,7 @@ export default function HomePage() {
           <aside>
             <div className="relative mx-auto max-w-[430px]">
               <div aria-hidden="true" className="absolute -right-3 -top-3 h-full w-full rotate-2 rounded-[2rem] bg-[#62d9ff]" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-feed-border bg-white shadow-[0_24px_70px_rgba(38,53,90,0.14)]">
+              <div className="relative overflow-hidden rounded-[2rem] border border-feed-border bg-feed-card shadow-[0_24px_70px_rgba(38,53,90,0.14)]">
                 <div className="flex items-center justify-between border-b border-feed-border px-5 py-4">
                   <div>
                     <p className="font-utility text-[10px] font-bold uppercase tracking-[0.14em] text-feed-text-muted">
@@ -66,7 +66,7 @@ export default function HomePage() {
                     </p>
                     <p className="mt-0.5 font-display text-lg font-black tracking-[-0.03em]">Why do habits stick?</p>
                   </div>
-                  <span className="flex h-8 items-center rounded-full bg-[#eaf7f3] px-3 text-[11px] font-bold text-[#008f7a]">
+                  <span className="flex h-8 items-center rounded-full bg-[#eaf7f3] px-3 text-[11px] font-bold text-[#008f7a] dark:bg-[#008f7a]/20 dark:text-[#6fdcc5]">
                     5 voices
                   </span>
                 </div>
@@ -87,8 +87,8 @@ export default function HomePage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-sm font-extrabold text-feed-text">{voice.name}</span>
                           <span
-                            className="rounded-full px-2 py-0.5 font-utility text-[9px] font-bold uppercase tracking-wide"
-                            style={{ color: voice.color, backgroundColor: `${voice.color}14` }}
+                            className="persona-chip rounded-full px-2 py-0.5 font-utility text-[9px] font-bold uppercase tracking-wide"
+                            style={{ '--persona-color': voice.color } as React.CSSProperties}
                           >
                             {voice.role}
                           </span>
@@ -117,7 +117,7 @@ export default function HomePage() {
                   key={exampleTopic}
                   type="button"
                   onClick={() => navigate(buildFeedUrl(exampleTopic, depth))}
-                  className="group flex min-h-14 w-full items-center justify-between gap-4 rounded-2xl border border-feed-border bg-white px-4 py-3 text-left text-sm font-bold text-feed-text shadow-sm transition-all hover:-translate-y-0.5 hover:border-feed-accent/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-feed-accent"
+                  className="group flex min-h-14 w-full items-center justify-between gap-4 rounded-2xl border border-feed-border bg-feed-card px-4 py-3 text-left text-sm font-bold text-feed-text shadow-sm transition-all hover:-translate-y-0.5 hover:border-feed-accent/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-feed-accent"
                 >
                   <span>{exampleTopic}</span>
                   <ArrowUpRight

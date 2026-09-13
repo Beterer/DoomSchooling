@@ -17,14 +17,6 @@ export default function LoginPage() {
           <SignIn
             signUpUrl="/register"
             forceRedirectUrl={redirectUrl}
-            appearance={{
-              variables: {
-                colorPrimary: '#176b59',
-                colorBackground: '#ffffff',
-                colorForeground: '#17201d',
-                borderRadius: '6px',
-              },
-            }}
           />
         ) : (
           <div className="max-w-md rounded-md border border-feed-border bg-feed-card p-6 text-center">
@@ -34,7 +26,7 @@ export default function LoginPage() {
             </p>
             <Link
               to={redirectUrl}
-              className="mx-auto mt-5 flex h-10 w-fit items-center gap-2 rounded-md bg-feed-text px-4 text-sm font-bold text-white transition-colors hover:bg-feed-accent"
+              className="mx-auto mt-5 flex h-10 w-fit items-center gap-2 rounded-md bg-feed-text px-4 text-sm font-bold text-feed-text-inverse transition-colors hover:bg-feed-accent"
             >
               Continue
               <ArrowRight aria-hidden="true" size={16} />

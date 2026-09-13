@@ -1,11 +1,11 @@
 import type { Persona } from '@doomschooling/shared';
 
 const ROLE_COLORS: Record<Persona['role'], string> = {
-  expert: 'bg-[#e9edff] text-[#3457d5]',
-  practitioner: 'bg-[#e6f6f2] text-[#008f7a]',
-  learner: 'bg-[#fff5d9] text-[#9b6900]',
-  skeptic: 'bg-[#fff0f0] text-[#d93d3d]',
-  enthusiast: 'bg-[#f2ebfb] text-[#7b48b5]',
+  expert: 'bg-[#e9edff] text-[#3457d5] dark:bg-[#3457d5]/25 dark:text-[#a9baff]',
+  practitioner: 'bg-[#e6f6f2] text-[#008f7a] dark:bg-[#008f7a]/25 dark:text-[#6fdcc5]',
+  learner: 'bg-[#fff5d9] text-[#9b6900] dark:bg-[#d99b16]/20 dark:text-[#f2c86b]',
+  skeptic: 'bg-[#fff0f0] text-[#d93d3d] dark:bg-[#ff5c5c]/20 dark:text-[#ff9d9d]',
+  enthusiast: 'bg-[#f2ebfb] text-[#7b48b5] dark:bg-[#8b5cc7]/25 dark:text-[#cfb0f2]',
 };
 
 const ROLE_LABELS: Record<Persona['role'], string> = {

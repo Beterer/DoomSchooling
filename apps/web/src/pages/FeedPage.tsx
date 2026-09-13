@@ -276,7 +276,7 @@ export default function FeedPage() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-transparent text-feed-text-secondary transition-colors hover:border-feed-border hover:bg-white hover:text-feed-text"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-transparent text-feed-text-secondary transition-colors hover:border-feed-border hover:bg-feed-card hover:text-feed-text"
             aria-label="Back to home"
             title="Back to home"
           >
@@ -295,7 +295,7 @@ export default function FeedPage() {
 
       <main className="mx-auto grid max-w-[1120px] items-start gap-8 px-0 py-0 lg:grid-cols-[240px_minmax(0,760px)] lg:px-6 lg:py-8">
         <aside className="sticky top-40 hidden lg:block">
-          <div className="rounded-2xl border border-feed-border bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-feed-border bg-feed-card p-4 shadow-sm">
           <p className="font-utility text-[10px] font-bold uppercase tracking-[0.14em] text-feed-text-muted">Discussion map</p>
           <div className="mt-3 rounded-xl bg-feed-bg p-3">
             <p className="text-sm font-bold text-feed-text">{depthLabel}</p>
@@ -340,7 +340,7 @@ export default function FeedPage() {
                 {personas.map((persona) => (
                   <div
                     key={persona.id}
-                    className="flex shrink-0 items-center gap-2 rounded-xl border border-feed-border bg-white py-1.5 pl-1.5 pr-3"
+                    className="flex shrink-0 items-center gap-2 rounded-xl border border-feed-border bg-feed-card py-1.5 pl-1.5 pr-3"
                   >
                     <span
                       className="flex h-7 w-7 items-center justify-center rounded-lg text-[9px] font-black text-white"
@@ -369,9 +369,9 @@ export default function FeedPage() {
           )}
 
           {initialLoad.isError && (
-            <div className="m-4 rounded-md border border-red-200 bg-red-50 p-6 text-center">
-              <p className="font-display text-xl font-bold text-red-900">The feed could not be generated</p>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-red-700">
+            <div className="m-4 rounded-md border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/60 dark:bg-red-950/40">
+              <p className="font-display text-xl font-bold text-red-900 dark:text-red-200">The feed could not be generated</p>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-red-700 dark:text-red-300">
                 {initialLoad.error.message}
               </p>
               <button
@@ -380,7 +380,7 @@ export default function FeedPage() {
                   setReadyFeed(null);
                   initialLoad.mutate({ topic, depth });
                 }}
-                className="mx-auto mt-5 flex h-10 items-center gap-2 rounded-md bg-feed-text px-4 text-sm font-bold text-white transition-colors hover:bg-feed-accent"
+                className="mx-auto mt-5 flex h-10 items-center gap-2 rounded-md bg-feed-text px-4 text-sm font-bold text-feed-text-inverse transition-colors hover:bg-feed-accent"
               >
                 <RefreshCw aria-hidden="true" size={16} />
                 Try again
