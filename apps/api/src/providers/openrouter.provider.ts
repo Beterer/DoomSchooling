@@ -2,17 +2,25 @@ import { z } from 'zod';
 import {
   FeedContinuationSchema,
   GeneratedFeedSchema,
+  SurpriseTopicSchema,
   type ContinueFeedRequest,
   type FeedContinuation,
   type FeedRequest,
   type GeneratedFeed,
   type ILLMProvider,
+  type SurpriseTopic,
+  type SurpriseTopicRequest,
 } from '@doomschooling/shared';
 import {
   buildContinueFeedUserPrompt,
   buildFeedSystemPrompt,
   buildFeedUserPrompt,
 } from '../prompts/feed.prompt.js';
+import {
+  buildSurpriseTopicSystemPrompt,
+  buildSurpriseTopicUserPrompt,
+  pickSurpriseSeed,
+} from '../prompts/surprise-topic.prompt.js';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEFAULT_MODEL = 'deepseek/deepseek-v4-flash';
@@ -93,6 +101,15 @@ const FEED_CONTINUATION_JSON_SCHEMA: JsonSchema = {
   required: ['posts'],
 };
 
+const SURPRISE_TOPIC_JSON_SCHEMA: JsonSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    topic: { type: 'string', maxLength: 120 },
+  },
+  required: ['topic'],
+};
+
 const OpenRouterResponseSchema = z
   .object({
     choices: z
@@ -128,6 +145,23 @@ interface OutputParser<T> {
   parse(value: unknown): T;
 }
 
+interface CompletionRequest<T> {
+  systemPrompt: string;
+  userPrompt: string;
+  schemaName: string;
+  jsonSchema: JsonSchema;
+  outputParser: OutputParser<T>;
+  temperature: number;
+  maxTokens: number;
+  timeoutMs: number;
+}
+
+const FEED_COMPLETION_SETTINGS = {
+  temperature: 0.7,
+  maxTokens: 4_500,
+  timeoutMs: 90_000,
+};
+
 class OpenRouterRequestError extends Error {
   readonly retryable: boolean;
   readonly statusCode = 502;
@@ -159,38 +193,52 @@ export class OpenRouterProvider implements ILLMProvider {
   }
 
   async generateFeed(request: FeedRequest): Promise<GeneratedFeed> {
-    return this.callWithRetry(
-      buildFeedUserPrompt(request),
-      'generated_feed',
-      GENERATED_FEED_JSON_SCHEMA,
-      GeneratedFeedSchema,
-    );
+    return this.callWithRetry({
+      ...FEED_COMPLETION_SETTINGS,
+      systemPrompt: buildFeedSystemPrompt(),
+      userPrompt: buildFeedUserPrompt(request),
+      schemaName: 'generated_feed',
+      jsonSchema: GENERATED_FEED_JSON_SCHEMA,
+      outputParser: GeneratedFeedSchema,
+    });
   }
 
   async continueFeed(request: ContinueFeedRequest): Promise<FeedContinuation> {
-    return this.callWithRetry(
-      buildContinueFeedUserPrompt(request),
-      'feed_continuation',
-      FEED_CONTINUATION_JSON_SCHEMA,
-      FeedContinuationSchema,
-    );
+    return this.callWithRetry({
+      ...FEED_COMPLETION_SETTINGS,
+      systemPrompt: buildFeedSystemPrompt(),
+      userPrompt: buildContinueFeedUserPrompt(request),
+      schemaName: 'feed_continuation',
+      jsonSchema: FEED_CONTINUATION_JSON_SCHEMA,
+      outputParser: FeedContinuationSchema,
+    });
+  }
+
+  async suggestSurpriseTopic(request: SurpriseTopicRequest): Promise<SurpriseTopic> {
+    return this.callWithRetry({
+      systemPrompt: buildSurpriseTopicSystemPrompt(),
+      userPrompt: buildSurpriseTopicUserPrompt(request, pickSurpriseSeed()),
+      schemaName: 'surprise_topic',
+      jsonSchema: SURPRISE_TOPIC_JSON_SCHEMA,
+      outputParser: SurpriseTopicSchema,
+      // Higher temperature keeps repeat clicks from landing on the same topic.
+      temperature: 1,
+      maxTokens: 100,
+      // Someone is waiting on a button, so give up quickly; the client has a fallback.
+      timeoutMs: 15_000,
+    });
   }
 
   async generateImage(_prompt: string): Promise<Buffer | null> {
     return null;
   }
 
-  private async callWithRetry<T>(
-    userPrompt: string,
-    schemaName: string,
-    jsonSchema: JsonSchema,
-    outputParser: OutputParser<T>,
-  ): Promise<T> {
+  private async callWithRetry<T>(completion: CompletionRequest<T>): Promise<T> {
     let lastError: unknown;
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        return await this.call(userPrompt, schemaName, jsonSchema, outputParser);
+        return await this.call(completion);
       } catch (error) {
         lastError = error;
         if (error instanceof OpenRouterRequestError && !error.retryable) break;
@@ -202,12 +250,16 @@ export class OpenRouterProvider implements ILLMProvider {
     throw new OpenRouterRequestError('OpenRouter generation failed', false);
   }
 
-  private async call<T>(
-    userPrompt: string,
-    schemaName: string,
-    jsonSchema: JsonSchema,
-    outputParser: OutputParser<T>,
-  ): Promise<T> {
+  private async call<T>({
+    systemPrompt,
+    userPrompt,
+    schemaName,
+    jsonSchema,
+    outputParser,
+    temperature,
+    maxTokens,
+    timeoutMs,
+  }: CompletionRequest<T>): Promise<T> {
     let response: Response;
     try {
       response = await fetch(OPENROUTER_URL, {
@@ -221,11 +273,11 @@ export class OpenRouterProvider implements ILLMProvider {
         body: JSON.stringify({
           model: this.model,
           messages: [
-            { role: 'system', content: buildFeedSystemPrompt() },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
-          temperature: 0.7,
-          max_tokens: 4_500,
+          temperature,
+          max_tokens: maxTokens,
           reasoning: {
             enabled: false,
           },
@@ -242,7 +294,7 @@ export class OpenRouterProvider implements ILLMProvider {
             },
           },
         }),
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (error) {
       const message = error instanceof Error && error.name === 'TimeoutError'

@@ -1,6 +1,10 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { GeneratedFeed, Post } from '@doomschooling/shared';
-import { FeedRequestSchema, ContinueFeedRequestSchema } from '@doomschooling/shared';
+import {
+  FeedRequestSchema,
+  ContinueFeedRequestSchema,
+  SurpriseTopicRequestSchema,
+} from '@doomschooling/shared';
 import { clerkClient, getAuth } from '@clerk/fastify';
 import { resolveProvider } from '../providers/index.js';
 import { ImageService } from '../services/image.service.js';
@@ -191,6 +195,22 @@ const feedsRoutes: FastifyPluginAsync<FeedsRouteOptions> = async (fastify, optio
     } finally {
       activeRequests.delete(topic);
     }
+  });
+
+  fastify.post('/api/feeds/surprise-topic', async (request, reply) => {
+    const parsed = SurpriseTopicRequestSchema.safeParse(request.body ?? {});
+
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: {
+          code: 'INVALID_REQUEST',
+          message: parsed.error.issues.map((i) => i.message).join('; '),
+        },
+      });
+    }
+
+    const suggestion = await provider.suggestSurpriseTopic(parsed.data);
+    return reply.code(200).send({ data: suggestion });
   });
 };
 

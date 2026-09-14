@@ -5,10 +5,18 @@ import {
   type GeneratedFeed,
   type ContinueFeedRequest,
   type FeedContinuation,
+  type SurpriseTopicRequest,
+  type SurpriseTopic,
   GeneratedFeedSchema,
   FeedContinuationSchema,
+  SurpriseTopicSchema,
 } from '@doomschooling/shared';
 import { buildFeedSystemPrompt, buildFeedUserPrompt, buildContinueFeedUserPrompt } from '../prompts/feed.prompt.js';
+import {
+  buildSurpriseTopicSystemPrompt,
+  buildSurpriseTopicUserPrompt,
+  pickSurpriseSeed,
+} from '../prompts/surprise-topic.prompt.js';
 
 const FEED_RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
@@ -64,12 +72,21 @@ const CONTINUATION_RESPONSE_SCHEMA: Schema = {
   },
 };
 
+const SURPRISE_TOPIC_RESPONSE_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  required: ['topic'],
+  properties: {
+    topic: { type: SchemaType.STRING },
+  },
+};
+
 export class GeminiProvider implements ILLMProvider {
   readonly supportsImageGeneration = true;
   readonly providerName = 'gemini';
 
   private readonly model;
   private readonly continuationModel;
+  private readonly surpriseTopicModel;
   private readonly imageModel;
 
   constructor() {
@@ -95,6 +112,15 @@ export class GeminiProvider implements ILLMProvider {
         temperature: 0.8,
       },
     });
+    this.surpriseTopicModel = genAI.getGenerativeModel({
+      model: modelName,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: SURPRISE_TOPIC_RESPONSE_SCHEMA,
+        // Higher temperature keeps repeat clicks from landing on the same topic.
+        temperature: 1,
+      },
+    });
     this.imageModel = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash-image',
       generationConfig: {
@@ -106,6 +132,7 @@ export class GeminiProvider implements ILLMProvider {
 
   async generateFeed(request: FeedRequest): Promise<GeneratedFeed> {
     return this.callWithRetry(
+      buildFeedSystemPrompt(),
       buildFeedUserPrompt(request),
       this.model,
       GeneratedFeedSchema,
@@ -114,9 +141,19 @@ export class GeminiProvider implements ILLMProvider {
 
   async continueFeed(request: ContinueFeedRequest): Promise<FeedContinuation> {
     return this.callWithRetry(
+      buildFeedSystemPrompt(),
       buildContinueFeedUserPrompt(request),
       this.continuationModel,
       FeedContinuationSchema,
+    );
+  }
+
+  async suggestSurpriseTopic(request: SurpriseTopicRequest): Promise<SurpriseTopic> {
+    return this.callWithRetry(
+      buildSurpriseTopicSystemPrompt(),
+      buildSurpriseTopicUserPrompt(request, pickSurpriseSeed()),
+      this.surpriseTopicModel,
+      SurpriseTopicSchema,
     );
   }
 
@@ -147,11 +184,11 @@ export class GeminiProvider implements ILLMProvider {
   }
 
   private async callWithRetry<T>(
+    systemPrompt: string,
     userPrompt: string,
     model: typeof this.model,
     schema: { parse: (data: unknown) => T },
   ): Promise<T> {
-    const systemPrompt = buildFeedSystemPrompt();
     let lastError: unknown;
 
     for (let attempt = 0; attempt < 2; attempt++) {

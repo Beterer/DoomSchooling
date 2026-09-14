@@ -47,6 +47,7 @@ Critical rules:
 ```
 POST /api/feeds/generate   — generate new feed for a topic
 POST /api/feeds/continue   — infinite scroll continuation (max 10 per topic)
+POST /api/feeds/surprise-topic — AI picks a surprising topic for "Surprise me"
 GET  /api/health           — health check
 ```
 

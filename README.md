@@ -105,6 +105,7 @@ All feed routes require a valid Clerk session.
 |---|---|---|
 | `POST` | `/api/feeds/generate` | Generate a new feed for a topic |
 | `POST` | `/api/feeds/continue` | Load more posts (infinite scroll) |
+| `POST` | `/api/feeds/surprise-topic` | Let the AI pick a surprising topic |
 | `GET` | `/api/health` | Health check (public) |
 
 The OpenRouter provider currently generates text only. When Gemini is selected, generated images are stored in `apps/api/src/uploads/` and served at `/uploads/`.

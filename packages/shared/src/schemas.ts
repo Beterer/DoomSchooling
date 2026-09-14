@@ -58,3 +58,12 @@ export const ContinueFeedRequestSchema = z.object({
 export const FeedContinuationSchema = z.object({
   posts: z.array(PostSchema),
 });
+
+export const SurpriseTopicRequestSchema = z.object({
+  depth: z.enum(['surface', 'intermediate', 'deep']).optional(),
+  avoidTopics: z.array(z.string().min(1).max(200)).max(20).optional(),
+});
+
+export const SurpriseTopicSchema = z.object({
+  topic: z.string().trim().min(1).max(120),
+});
