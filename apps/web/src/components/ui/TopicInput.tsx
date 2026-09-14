@@ -1,4 +1,4 @@
-import { ArrowRight, MessageSquareText } from 'lucide-react';
+import { ArrowRight, Dices, LoaderCircle, MessageSquareText } from 'lucide-react';
 import { DEPTH_OPTIONS, type LearningDepth } from '@/lib/feed';
 
 interface TopicInputProps {
@@ -7,9 +7,19 @@ interface TopicInputProps {
   onChange: (value: string) => void;
   onDepthChange: (depth: LearningDepth) => void;
   onSubmit: () => void;
+  onSurprise: () => void;
+  isSurprising: boolean;
 }
 
-export function TopicInput({ value, depth, onChange, onDepthChange, onSubmit }: TopicInputProps) {
+export function TopicInput({
+  value,
+  depth,
+  onChange,
+  onDepthChange,
+  onSubmit,
+  onSurprise,
+  isSurprising,
+}: TopicInputProps) {
   return (
     <form
       onSubmit={(event) => {
@@ -28,14 +38,29 @@ export function TopicInput({ value, depth, onChange, onDepthChange, onSubmit }: 
           type="text"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Why do empires collapse?"
+          placeholder={isSurprising ? 'Finding something surprising...' : 'Why do empires collapse?'}
           className="min-w-0 flex-1 bg-transparent px-1 py-2 text-base font-semibold text-feed-text placeholder:font-normal placeholder:text-feed-text-muted focus:outline-none sm:text-lg"
           autoFocus
           maxLength={500}
         />
         <button
+          type="button"
+          onClick={onSurprise}
+          disabled={isSurprising}
+          aria-label="Surprise me with a topic"
+          title="Surprise me with a topic"
+          className="flex h-11 shrink-0 items-center gap-2 rounded-xl border border-feed-border bg-feed-bg px-3 text-sm font-bold text-feed-text-secondary transition-all hover:-translate-y-0.5 hover:border-feed-accent/40 hover:text-feed-accent disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0 sm:px-4"
+        >
+          {isSurprising ? (
+            <LoaderCircle aria-hidden="true" className="animate-spin" size={18} />
+          ) : (
+            <Dices aria-hidden="true" size={18} />
+          )}
+          <span className="hidden sm:inline">{isSurprising ? 'Picking...' : 'Surprise me'}</span>
+        </button>
+        <button
           type="submit"
-          disabled={!value.trim()}
+          disabled={!value.trim() || isSurprising}
           className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-feed-text px-4 text-sm font-bold text-feed-text-inverse shadow-[3px_3px_0_#62d9ff] transition-all hover:-translate-y-0.5 hover:bg-feed-accent disabled:cursor-not-allowed disabled:opacity-40 sm:px-5"
         >
           <span className="hidden sm:inline">Build my feed</span>

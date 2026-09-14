@@ -1,10 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { TopicInput } from '@/components/ui/TopicInput';
 import { SiteHeader } from '@/components/ui/SiteHeader';
 import { TOPIC_POOL } from '@/data/topics';
+import { suggestSurpriseTopic } from '@/lib/api';
+import { useAppAuth } from '@/lib/auth';
 import { buildFeedUrl, DEFAULT_DEPTH, type LearningDepth } from '@/lib/feed';
+import {
+  loadRecentSurpriseTopics,
+  pickFallbackTopic,
+  rememberSurpriseTopic,
+} from '@/lib/surprise';
 
 function pickRandomTopics(count: number): string[] {
   const shuffled = [...TOPIC_POOL].sort(() => Math.random() - 0.5);
@@ -15,12 +23,51 @@ export default function HomePage() {
   const [topic, setTopic] = useState('');
   const [depth, setDepth] = useState<LearningDepth>(DEFAULT_DEPTH);
   const navigate = useNavigate();
+  const { isSignedIn } = useAppAuth();
   const exampleTopics = useMemo(() => pickRandomTopics(6), []);
+  const surprise = useMutation({ mutationFn: suggestSurpriseTopic });
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   function handleSubmit() {
     const trimmed = topic.trim();
     if (!trimmed) return;
     navigate(buildFeedUrl(trimmed, depth));
+  }
+
+  async function handleSurprise() {
+    if (surprise.isPending) return;
+
+    const recentTopics = loadRecentSurpriseTopics();
+    const pickFromPool = () =>
+      pickFallbackTopic(TOPIC_POOL, [...recentTopics, ...exampleTopics]);
+
+    let surpriseTopic: string;
+    if (isSignedIn) {
+      try {
+        const suggestion = await surprise.mutateAsync({ depth, avoidTopics: recentTopics });
+        surpriseTopic = suggestion.topic;
+      } catch {
+        // The AI pick is a nice extra. The built-in pool keeps the button working without it.
+        surpriseTopic = pickFromPool();
+      }
+    } else {
+      // Signed-out visitors can't call the API; the feed page sends them to sign in first.
+      surpriseTopic = pickFromPool();
+    }
+
+    // Skip navigating if the reader already left the page while the AI was thinking.
+    if (!isMountedRef.current) return;
+
+    rememberSurpriseTopic(surpriseTopic);
+    setTopic(surpriseTopic);
+    navigate(buildFeedUrl(surpriseTopic, depth));
   }
 
   return (
@@ -51,6 +98,8 @@ export default function HomePage() {
                 onChange={setTopic}
                 onDepthChange={setDepth}
                 onSubmit={handleSubmit}
+                onSurprise={() => void handleSurprise()}
+                isSurprising={surprise.isPending}
               />
             </div>
           </div>

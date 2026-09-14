@@ -8,6 +8,8 @@ import type {
   GeneratedFeedSchema,
   ContinueFeedRequestSchema,
   FeedContinuationSchema,
+  SurpriseTopicRequestSchema,
+  SurpriseTopicSchema,
 } from './schemas.js';
 
 // Derive all types from Zod schemas — single source of truth.
@@ -21,3 +23,5 @@ export type FeedRequest = z.infer<typeof FeedRequestSchema>;
 export type GeneratedFeed = z.infer<typeof GeneratedFeedSchema>;
 export type ContinueFeedRequest = z.infer<typeof ContinueFeedRequestSchema>;
 export type FeedContinuation = z.infer<typeof FeedContinuationSchema>;
+export type SurpriseTopicRequest = z.infer<typeof SurpriseTopicRequestSchema>;
+export type SurpriseTopic = z.infer<typeof SurpriseTopicSchema>;

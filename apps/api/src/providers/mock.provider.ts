@@ -1,4 +1,13 @@
-import { type ILLMProvider, type FeedRequest, type GeneratedFeed, type Post, type ContinueFeedRequest, type FeedContinuation, GeneratedFeedSchema, FeedContinuationSchema } from '@doomschooling/shared';
+import { type ILLMProvider, type FeedRequest, type GeneratedFeed, type Post, type ContinueFeedRequest, type FeedContinuation, type SurpriseTopicRequest, type SurpriseTopic, GeneratedFeedSchema, FeedContinuationSchema, SurpriseTopicSchema } from '@doomschooling/shared';
+
+const MOCK_SURPRISE_TOPICS = [
+  'How Polynesian sailors navigated without instruments',
+  'Why the Tacoma Narrows Bridge twisted itself apart',
+  'How octopuses change color without seeing color',
+  'The Monty Hall problem',
+  'How the Antikythera mechanism predicted eclipses',
+  'Why cats always land on their feet',
+] as const;
 
 /**
  * Returns a hardcoded GeneratedFeed for UI development and CI environments.
@@ -48,6 +57,14 @@ export class MockProvider implements ILLMProvider {
       ],
     };
     return FeedContinuationSchema.parse(continuation);
+  }
+
+  async suggestSurpriseTopic(request: SurpriseTopicRequest): Promise<SurpriseTopic> {
+    const avoid = new Set((request.avoidTopics ?? []).map((topic) => topic.trim().toLowerCase()));
+    const fresh = MOCK_SURPRISE_TOPICS.filter((topic) => !avoid.has(topic.toLowerCase()));
+    const choices = fresh.length > 0 ? fresh : MOCK_SURPRISE_TOPICS;
+    const topic = choices[Math.floor(Math.random() * choices.length)] ?? MOCK_SURPRISE_TOPICS[0];
+    return SurpriseTopicSchema.parse({ topic });
   }
 
   async generateImage(_prompt: string): Promise<Buffer | null> {

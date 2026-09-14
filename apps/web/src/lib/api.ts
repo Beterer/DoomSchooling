@@ -1,4 +1,11 @@
-import type { FeedRequest, GeneratedFeed, ContinueFeedRequest, FeedContinuation } from '@doomschooling/shared';
+import type {
+  FeedRequest,
+  GeneratedFeed,
+  ContinueFeedRequest,
+  FeedContinuation,
+  SurpriseTopicRequest,
+  SurpriseTopic,
+} from '@doomschooling/shared';
 
 type ApiError = {
   error: {
@@ -36,6 +43,14 @@ export async function generateFeed(request: FeedRequest): Promise<GeneratedFeed>
 
 export async function continueFeed(request: ContinueFeedRequest): Promise<FeedContinuation> {
   return fetchApi<FeedContinuation>('/api/feeds/continue', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function suggestSurpriseTopic(request: SurpriseTopicRequest): Promise<SurpriseTopic> {
+  return fetchApi<SurpriseTopic>('/api/feeds/surprise-topic', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
